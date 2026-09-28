@@ -16,3 +16,5 @@
 - Global company Git hooks remain enabled; do not alter them for this project.
 
 - Public/private boundary: `/private/` pages use Nginx `auth_request` against `/api/auth/check`; data APIs independently verify sessions. Authenticated pages are no-store, noindex, excluded from public search and sitemap. Public GitHub content is never private, even if draft. Login return paths must use the allowlist in `src/lib/private-routes.mjs`.
+
+- Visual design: light studio theme, shared top navigation, blue accent, sans-serif reading and monospace metadata. Public layout uses `src/styles/global.css`; keep the independent calendar in `src/styles/cycle.css` soft and unchanged by global redesigns.

@@ -5,11 +5,11 @@ import { ideaStates, formatDate } from '../../site';
 const ideas = await publicIdeas();
 ---
 <Layout title="Ideas" active="ideas">
-  <header class="page-heading"><h1>想法苗圃<span class="count">{ideas.length} 个想法</span></h1><p>先记下来，再看看哪些值得往前走一步。</p></header>
+  <header class="page-heading"><h1>Ideas<span class="count">{ideas.length} 个想法</span></h1><p>先记下来，再看看哪些值得往前走一步。</p></header>
   <div class="filter-bar" aria-label="按进展筛选"><button class="filter-button" data-status="all" aria-pressed="true">全部</button>{Object.entries(ideaStates).map(([key,label]) => <button class="filter-button" data-status={key} aria-pressed="false">{label}</button>)}</div>
   <p id="idea-count" class="filter-summary" role="status">共 {ideas.length} 个想法</p>
   <div class="ideas-grid">{ideas.map(idea => <article class="idea-card" data-idea-status={idea.data.status}><div class="entry-meta"><span class={`idea-status ${idea.data.status}`}>{ideaStates[idea.data.status]}</span>{idea.data.example && <span class="example-label">示例</span>}<time datetime={idea.data.date.toISOString()}>{formatDate(idea.data.date)}</time></div><h2><a href={`/ideas/${idea.id}/`}>{idea.data.title}</a></h2><p>{idea.data.description}</p><div class="tags">{idea.data.tags.map(tag => <span>#{tag}</span>)}</div></article>)}</div>
-  <div class="empty-state" id="ideas-empty" hidden><p>这个阶段还没有想法。种子可以慢慢来。</p></div>
+  <div class="empty-state" id="ideas-empty" hidden><p>这个阶段还没有想法。</p></div>
   <script>
     const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-status]')];
     const cards = [...document.querySelectorAll<HTMLElement>('[data-idea-status]')];

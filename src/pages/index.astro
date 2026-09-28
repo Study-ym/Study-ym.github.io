@@ -9,22 +9,26 @@ const notes = allNotes.filter(note => !note.data.example).slice(0, 3);
 const ideas = allIdeas.filter(idea => !idea.data.example).slice(0, 3);
 ---
 <Layout>
-  <div class="simple-home">
-    <header class="home-introduction">
-      <h1>余安的数字花园</h1>
-      <p>记录生活与学习，整理想法，做些日常用得上的小工具。</p>
+  <div class="studio-home">
+    <header class="studio-hero">
+      <p class="hero-kicker">余安的数字花园</p>
+      <h1>记录思考，构建日常。</h1>
+      <p class="hero-description">关于技术、生活，以及正在尝试的事情。<br />在这里留下记录，也让想法慢慢变成作品。</p>
+      <div class="hero-links"><a href="/notes/">阅读记录 <span aria-hidden="true">↗</span></a><a href="https://github.com/Study-ym" target="_blank" rel="noopener noreferrer">GitHub</a></div>
     </header>
+    <div class="studio-content-grid">
+      <section class="home-section" aria-labelledby="home-notes-title">
+        <div class="section-heading"><h2 id="home-notes-title">最近记录</h2><a href="/notes/">全部记录</a></div>
+        {notes.length ? <NoteList notes={notes} /> : <p class="home-empty">还没有发布记录。</p>}
+      </section>
+      <section class="home-section" aria-labelledby="home-ideas-title">
+        <div class="section-heading"><h2 id="home-ideas-title">Ideas</h2><a href="/ideas/">全部想法</a></div>
+        {ideas.length ? <div class="home-idea-list">{ideas.map(idea => <article><time datetime={idea.data.date.toISOString()}>{formatDate(idea.data.date)}</time><h3><a href={`/ideas/${idea.id}/`}>{idea.data.title}</a></h3><p>{idea.data.description}</p></article>)}</div> : <p class="home-empty">还没有发布想法。</p>}
+      </section>
+    </div>
     <section class="home-tools" aria-labelledby="home-tools-title">
       <div class="section-heading"><h2 id="home-tools-title">常用工具</h2><a href="/tools/">全部工具</a></div>
       <ToolTiles />
-    </section>
-    <section class="home-section" aria-labelledby="home-notes-title">
-      <div class="section-heading"><h2 id="home-notes-title">最近记录</h2><a href="/notes/">全部记录</a></div>
-      {notes.length ? <NoteList notes={notes} /> : <p class="home-empty">还没有发布记录。</p>}
-    </section>
-    <section class="home-section" aria-labelledby="home-ideas-title">
-      <div class="section-heading"><h2 id="home-ideas-title">Ideas</h2><a href="/ideas/">全部想法</a></div>
-      {ideas.length ? <div class="home-idea-list">{ideas.map(idea => <article><div><h3><a href={`/ideas/${idea.id}/`}>{idea.data.title}</a></h3><p>{idea.data.description}</p></div><time datetime={idea.data.date.toISOString()}>{formatDate(idea.data.date)}</time></article>)}</div> : <p class="home-empty">还没有发布想法。</p>}
     </section>
   </div>
 </Layout>

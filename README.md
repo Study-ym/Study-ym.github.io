@@ -83,10 +83,14 @@ GitHub Pages 备用站仍是本地模式，不会上传其浏览器旧记录。�
 | `src/lib/content.ts` | 公共内容筛选，统一排除草稿 |
 | `src/pages/tools/index.astro` | 工具交互 |
 | `src/lib/tools.mjs` | 工具纯函数 |
-| `src/pages/tools/cycle/index.astro` | 月笺独立手机页面 |
+| `src/components/CyclePage.astro` | 月笺独立手机页面，服务器入口 `/private/cycle/` |
 | `src/scripts/cycle.ts` | 月笺交互、本地保存与备份 |
 | `src/lib/cycle.mjs` | 日期、重叠检查与备份校验 |
 | `src/layouts/Layout.astro` | 导航、页脚、全站搜索 |
 | `src/styles/global.css` | 样式与响应式布局 |
 
 公开文章和 Ideas 仍从 Git 仓库发布，访客不能修改公开内容。私有经期数据独立保存，不进入公开搜索或 RSS。正式服务器部署、回滚、备份及首次账号设置见 [部署说明](deploy/README.md)，API 协议见 [后端说明](server/README.md)。
+
+## 界面风格
+
+公开花园与私人空间使用浅色工作室风格：顶部导航、深灰正文、蓝色强调、记录列表和紧凑工具入口。全局视觉在 `src/styles/global.css`，共享页面框架在 `src/layouts/Layout.astro`。月笺使用独立样式，保留柔和配色与可关闭的小猫。
