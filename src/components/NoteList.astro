@@ -1,0 +1,18 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { stages, formatDate } from '../site';
+import Icon from './Icon.astro';
+interface Props { notes: CollectionEntry<'notes'>[]; }
+const { notes } = Astro.props;
+---
+<div class="note-list">
+  {notes.map(note => <article class="note-row" data-entry data-tags={JSON.stringify(note.data.tags)} data-query={[note.data.title, note.data.description, note.data.tags.join(' '), note.body].join(' ').toLowerCase()}>
+    <div class="note-row-content">
+      <div class="entry-meta"><span class={`stage ${note.data.stage}`}><span></span>{stages[note.data.stage].label}</span>{note.data.example && <span class="example-label">示例</span>}<time datetime={(note.data.updated ?? note.data.date).toISOString()}>{formatDate(note.data.updated ?? note.data.date)}</time></div>
+      <h3><a href={`/notes/${note.id}/`}>{note.data.title}</a></h3>
+      <p>{note.data.description}</p>
+      <div class="tags">{note.data.tags.map(tag => <a href={`/notes/?tag=${encodeURIComponent(tag)}`}>#{tag}</a>)}</div>
+    </div>
+    <a class="row-arrow" href={`/notes/${note.id}/`} aria-label={`阅读：${note.data.title}`}><Icon name="arrow" /></a>
+  </article>)}
+</div>

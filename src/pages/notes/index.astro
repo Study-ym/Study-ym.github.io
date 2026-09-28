@@ -1,0 +1,33 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import NoteList from '../../components/NoteList.astro';
+import Icon from '../../components/Icon.astro';
+import { publicNotes } from '../../lib/content';
+const notes = await publicNotes();
+const tags = [...new Set(notes.flatMap(note => note.data.tags))];
+---
+<Layout title="记录" active="notes">
+  <header class="page-heading"><h1>记录<span class="count">{notes.length} 篇</span></h1><p>长文、短记、还在整理的念头，都可以在这里落地。</p></header>
+  <label class="list-search"><Icon name="search" size={17}/><input id="note-query" type="search" placeholder="搜索记录内容…" aria-label="搜索记录内容" /></label>
+  <div class="filter-bar" aria-label="按标签筛选"><button class="filter-button" data-tag="" aria-pressed="true">全部</button>{tags.map(tag => <button class="filter-button" data-tag={tag} aria-pressed="false">{tag}</button>)}</div>
+  <p class="filter-summary" id="filter-summary" role="status">共 {notes.length} 篇记录</p>
+  <NoteList notes={notes}/>
+  <div class="empty-state" id="notes-empty" hidden><Icon name="leaf" size={28}/><p>这里暂时还没有记录。</p><button class="button secondary" id="reset-filter">清除筛选</button></div>
+  <script>
+    const query = document.querySelector<HTMLInputElement>('#note-query')!;
+    const rows = [...document.querySelectorAll<HTMLElement>('[data-entry]')];
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-tag]')];
+    let selected = new URLSearchParams(location.search).get('tag') ?? '';
+    function filter() {
+      let count = 0; const terms = query.value.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
+      rows.forEach(row => { const tags: string[] = JSON.parse(row.dataset.tags!); row.hidden = !!selected && !tags.includes(selected) || !terms.every(term => row.dataset.query!.includes(term)); if (!row.hidden) count++; });
+      buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.tag === selected)));
+      document.querySelector('#filter-summary')!.textContent = selected ? `标签「${selected}」下找到 ${count} 篇记录` : `找到 ${count} 篇记录`;
+      document.querySelector<HTMLElement>('#notes-empty')!.hidden = count !== 0;
+    }
+    buttons.forEach(button => button.addEventListener('click', () => { selected = button.dataset.tag!; const url = new URL(location.href); selected ? url.searchParams.set('tag', selected) : url.searchParams.delete('tag'); history.replaceState(null, '', url); filter(); }));
+    query.addEventListener('input', filter);
+    document.querySelector('#reset-filter')?.addEventListener('click', () => { selected = ''; query.value = ''; history.replaceState(null, '', location.pathname); filter(); });
+    filter();
+  </script>
+</Layout>

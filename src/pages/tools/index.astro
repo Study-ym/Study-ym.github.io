@@ -1,0 +1,73 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Icon from '../../components/Icon.astro';
+---
+<Layout title="工具箱" active="tools">
+  <div class="tools-page">
+    <header class="page-heading"><h1>顺手的小工具</h1><p>把重复的小事交给工具，留些时间给有意思的事。</p></header>
+    <div class="tool-tabs" role="tablist" aria-label="选择工具">
+      <button class="tool-tab" id="tab-json" role="tab" aria-controls="panel-json" aria-selected="true" data-tool="json"><Icon name="code"/>JSON 整理</button>
+      <button class="tool-tab" id="tab-time" role="tab" aria-controls="panel-time" aria-selected="false" tabindex="-1" data-tool="time"><Icon name="clock"/>时间戳转换</button>
+      <button class="tool-tab" id="tab-url" role="tab" aria-controls="panel-url" aria-selected="false" tabindex="-1" data-tool="url"><Icon name="link"/>URL 编解码</button>
+    </div>
+    <section class="tool-workspace" id="panel-json" role="tabpanel" aria-labelledby="tab-json">
+      <h2>JSON 整理</h2><p class="tool-description">粘贴 JSON，整理缩进、检查格式，或压缩成一行。</p>
+      <label class="field-label" for="json-input">JSON 内容</label><textarea id="json-input" spellcheck="false" placeholder={'{"hello": "garden", "ideas": ["记录", "尝试"]}'}></textarea>
+      <div class="tool-actions"><button class="button" id="json-format">格式化</button><button class="button secondary" id="json-minify">压缩</button><button class="button secondary" id="json-copy">复制内容</button><button class="button quiet" id="json-example">填入示例</button><button class="button quiet" id="json-clear">清空</button></div>
+      <p class="tool-status" id="json-status" role="status">等待输入。</p>
+    </section>
+    <section class="tool-workspace" id="panel-time" role="tabpanel" aria-labelledby="tab-time" hidden>
+      <h2>时间戳转换</h2><p class="tool-description">明确选择秒或毫秒，结果同时显示 UTC 和浏览器本地时间。</p>
+      <div class="field-row"><label><span class="field-label">时间戳</span><input id="timestamp-input" inputmode="numeric" placeholder="例如 0" /></label><label><span class="field-label">单位</span><select id="timestamp-unit"><option value="seconds">秒</option><option value="milliseconds">毫秒</option></select></label></div>
+      <div class="tool-actions"><button class="button" id="timestamp-convert">转成日期</button><button class="button secondary" id="timestamp-now">当前时间</button></div>
+      <div class="tool-output" id="timestamp-output" aria-live="polite">转换结果会显示在这里。</div>
+      <hr class="tool-separator"/>
+      <h2>日期转时间戳</h2><label class="field-label" for="date-input">日期与时间（浏览器本地时区：<span id="local-timezone"></span>）</label><input id="date-input" type="datetime-local" step="1" />
+      <div class="tool-actions"><button class="button" id="date-convert">转成时间戳</button><button class="button secondary" id="date-copy">复制毫秒值</button></div>
+      <div class="tool-output" id="date-output" aria-live="polite">转换结果会显示在这里。</div><p class="tool-status" id="time-status" role="status"></p>
+    </section>
+    <section class="tool-workspace" id="panel-url" role="tabpanel" aria-labelledby="tab-url" hidden>
+      <h2>URL 编解码</h2><p class="tool-description">按 URL 参数值编码，使用 encodeURIComponent / decodeURIComponent。完整链接中的分隔符也会被编码。</p>
+      <label class="field-label" for="url-input">需要处理的文字</label><textarea id="url-input" spellcheck="false" placeholder="你好，花园 / hello garden"></textarea>
+      <div class="tool-actions"><button class="button" id="url-encode">编码</button><button class="button secondary" id="url-decode">解码</button><button class="button secondary" id="url-copy">复制结果</button><button class="button quiet" id="url-clear">清空</button></div>
+      <label class="field-label" for="url-output">结果</label><textarea id="url-output" readonly spellcheck="false" placeholder="处理后的结果" style="min-height:130px"></textarea><p class="tool-status" id="url-status" role="status">等待输入。</p>
+    </section>
+    <p class="privacy-note"><Icon name="leaf" size={14}/>工具中的输入仅在当前浏览器处理，不上传、不保存；刷新后清空。</p>
+    <noscript><p class="example-notice">这三个工具需要启用 JavaScript。文章和记录仍可正常阅读。</p></noscript>
+  </div>
+  <script>
+    import { formatJson, timestampToDate, localDateToTimestamp, transformUrl } from '../../lib/tools.mjs';
+    const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+    const input = (id: string) => element<HTMLInputElement | HTMLTextAreaElement>(id);
+    function status(id: string, text: string, error = false) { const target = element(id); target.textContent = text; target.dataset.error = String(error); }
+    const tabs = [...document.querySelectorAll<HTMLButtonElement>('[data-tool]')];
+    function selectTool(name: string, focus = false) {
+      if (!['json', 'time', 'url'].includes(name)) name = 'json';
+      tabs.forEach(tab => { const active = tab.dataset.tool === name; tab.setAttribute('aria-selected', String(active)); tab.tabIndex = active ? 0 : -1; element(`panel-${tab.dataset.tool}`).hidden = !active; if (active && focus) tab.focus(); });
+    }
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => { selectTool(tab.dataset.tool!); history.replaceState(null, '', `#${tab.dataset.tool}`); });
+      tab.addEventListener('keydown', event => { let next = index; if (event.key === 'ArrowRight') next = (index + 1) % tabs.length; else if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length; else if (event.key === 'Home') next = 0; else if (event.key === 'End') next = tabs.length - 1; else return; event.preventDefault(); selectTool(tabs[next].dataset.tool!, true); history.replaceState(null, '', `#${tabs[next].dataset.tool}`); });
+    });
+    selectTool(location.hash.slice(1)); window.addEventListener('hashchange', () => selectTool(location.hash.slice(1)));
+    async function copy(value: string, statusId: string) { if (!value) return status(statusId, '目前没有可以复制的内容。', true); try { await navigator.clipboard.writeText(value); status(statusId, '已复制。'); } catch { status(statusId, '浏览器未允许复制，请选中文字后手动复制。', true); } }
+    function json(compact: boolean) { try { input('json-input').value = formatJson(input('json-input').value, compact); status('json-status', compact ? '已压缩，JSON 格式有效。' : '已格式化，JSON 格式有效。'); } catch (error) { status('json-status', `无法整理：${(error as Error).message}`, true); } }
+    element('json-format').addEventListener('click', () => json(false)); element('json-minify').addEventListener('click', () => json(true));
+    element('json-copy').addEventListener('click', () => copy(input('json-input').value, 'json-status'));
+    element('json-example').addEventListener('click', () => { input('json-input').value = '{"hello":"garden","ideas":["记录","尝试"],"growing":true}'; status('json-status', '示例已填入，可以试试格式化。'); });
+    element('json-clear').addEventListener('click', () => { input('json-input').value = ''; status('json-status', '已清空。'); });
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    element('local-timezone').textContent = timeZone;
+    function convertTimestamp() { try { const date = timestampToDate(input('timestamp-input').value, element<HTMLSelectElement>('timestamp-unit').value); element('timestamp-output').textContent = `UTC：${date.toISOString()}\n本地：${new Intl.DateTimeFormat('zh-CN', { dateStyle:'full', timeStyle:'long', timeZone }).format(date)}\n时区：${timeZone}`; status('time-status', '转换完成。'); } catch(error) { element('timestamp-output').textContent = '尚无有效结果。'; status('time-status', (error as Error).message, true); } }
+    element('timestamp-convert').addEventListener('click', convertTimestamp);
+    element('timestamp-now').addEventListener('click', () => { element<HTMLSelectElement>('timestamp-unit').value = 'milliseconds'; input('timestamp-input').value = String(Date.now()); convertTimestamp(); });
+    let milliseconds: string = '';
+    element('date-convert').addEventListener('click', () => { try { const result = localDateToTimestamp(input('date-input').value); milliseconds = String(result.milliseconds); element('date-output').textContent = `秒：${result.seconds}\n毫秒：${result.milliseconds}`; status('time-status', '转换完成。'); } catch(error) { milliseconds = ''; element('date-output').textContent = '尚无有效结果。'; status('time-status', (error as Error).message, true); } });
+    input('date-input').addEventListener('input', () => { milliseconds = ''; element('date-output').textContent = '日期已改变，请重新转换。'; });
+    element('date-copy').addEventListener('click', () => copy(milliseconds, 'time-status'));
+    function url(mode: 'encode' | 'decode') { try { input('url-output').value = transformUrl(input('url-input').value, mode); status('url-status', mode === 'encode' ? '已编码。' : '已解码。'); } catch { input('url-output').value = ''; status('url-status', input('url-input').value ? '无法处理，请检查编码是否完整、有效。' : '先输入需要处理的文字。', true); } }
+    element('url-encode').addEventListener('click', () => url('encode')); element('url-decode').addEventListener('click', () => url('decode')); element('url-copy').addEventListener('click', () => copy(input('url-output').value, 'url-status'));
+    input('url-input').addEventListener('input', () => { input('url-output').value = ''; status('url-status', '内容已改变，请选择编码或解码。'); });
+    element('url-clear').addEventListener('click', () => { input('url-input').value = ''; input('url-output').value = ''; status('url-status', '已清空。'); });
+  </script>
+</Layout>

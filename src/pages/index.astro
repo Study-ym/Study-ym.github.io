@@ -1,0 +1,25 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Icon from '../components/Icon.astro';
+import GardenArt from '../components/GardenArt.astro';
+import NoteList from '../components/NoteList.astro';
+import ToolTiles from '../components/ToolTiles.astro';
+import { publicNotes, publicIdeas } from '../lib/content';
+import { ideaStates, stages } from '../site';
+const [notes, ideas] = await Promise.all([publicNotes(), publicIdeas()]);
+---
+<Layout>
+  <section class="home-hero">
+    <div><p class="hello"><Icon name="sun" size={16} />你好，我是余安</p><h1>一片慢慢生长的<br/>数字花园。</h1><p class="hero-intro">记下遇见的事，收集还没成形的想法，<br/>也做一些让日常变简单的小工具。</p></div>
+    <GardenArt />
+  </section>
+  <div class="welcome-strip"><span><Icon name="leaf" size={18}/><strong>不必等想清楚，先种下一颗种子。</strong>这里允许未完成，也欢迎新的连接。</span><a href="/about/">关于这片花园<Icon name="chevron" size={13}/></a></div>
+  <div class="home-columns">
+    <section><div class="section-heading"><h2><Icon name="book" size={19} />最近的记录</h2><a href="/notes/">全部记录<Icon name="chevron" size={12}/></a></div><p class="section-subtitle">新的发现，和旧想法的新枝叶。</p><NoteList notes={notes.slice(0, 3)} /></section>
+    <aside class="home-aside">
+      <section class="ideas-widget"><div class="section-heading"><h2><Icon name="bulb" size={19}/>想法苗圃</h2><a href="/ideas/" aria-label="全部 Ideas"><Icon name="arrow" size={16}/></a></div><p class="section-subtitle">一些「如果可以……」</p>{ideas.slice(0,2).map(idea => <a class="mini-idea" href={`/ideas/${idea.id}/`}><span class={`idea-status ${idea.data.status}`}>{ideaStates[idea.data.status]}</span>{idea.data.example && <span class="example-label" style="margin-left:8px">示例</span>}<h3>{idea.data.title}</h3><p>{idea.data.description}</p></a>)}</section>
+      <section class="garden-guide"><h3>每条记录都有自己的节奏</h3>{Object.entries(stages).map(([key, stage]) => <p><span class={`stage ${key}`}><span></span>{stage.label}</span><span>{stage.description}</span></p>)}</section>
+    </aside>
+  </div>
+  <section class="tools-section"><div class="section-heading"><h2><Icon name="tools" size={19}/>顺手的小工具</h2><a href="/tools/">打开工具箱<Icon name="chevron" size={12}/></a></div><p class="section-subtitle">需要时打开，用完继续生活。</p><ToolTiles /></section>
+</Layout>

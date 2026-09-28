@@ -1,0 +1,17 @@
+---
+import { render } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import Icon from '../../components/Icon.astro';
+import { publicIdeas } from '../../lib/content';
+import { ideaStates, formatDate, site } from '../../site';
+export async function getStaticPaths() { return (await publicIdeas()).map(idea => ({ params: { id: idea.id }, props: { idea } })); }
+const { idea } = Astro.props;
+const { Content } = await render(idea);
+---
+<Layout title={idea.data.title} description={idea.data.description} active="ideas">
+  <a class="back-link" href="/ideas/"><Icon name="arrow" size={16}/>所有想法</a>
+  <header class="article-header"><div class="entry-meta"><span class={`idea-status ${idea.data.status}`}>{ideaStates[idea.data.status]}</span><time datetime={idea.data.date.toISOString()}>{formatDate(idea.data.date)}</time>{idea.data.updated && <span>更新于 {formatDate(idea.data.updated)}</span>}</div><h1>{idea.data.title}</h1><p>{idea.data.description}</p><div class="tags">{idea.data.tags.map(tag => <span>#{tag}</span>)}</div></header>
+  {idea.data.example && <p class="example-notice">这是一个示例想法，你可以替换成自己的灵感。</p>}
+  <article class="prose"><Content /></article>
+  <div class="article-end"><span>从一个念头，到一次小小的尝试。</span><a href={`${site.repo}/edit/main/${idea.filePath}`} target="_blank" rel="noopener noreferrer">在 GitHub 编辑<Icon name="external" size={12}/></a></div>
+</Layout>

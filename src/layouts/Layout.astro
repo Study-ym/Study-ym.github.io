@@ -1,0 +1,86 @@
+---
+import '../styles/global.css';
+import Icon from '../components/Icon.astro';
+import { site } from '../site';
+interface Props { title?: string; description?: string; active?: string; noindex?: boolean; }
+const { title, description = site.description, active = 'home', noindex = false } = Astro.props;
+const navigation = [ { key:'home', url:'/', label:'花园', icon:'home' }, { key:'notes',url:'/notes/',label:'记录',icon:'book'}, {key:'ideas',url:'/ideas/',label:'Ideas',icon:'bulb'}, {key:'tools',url:'/tools/',label:'工具箱',icon:'tools'}, {key:'about',url:'/about/',label:'关于',icon:'leaf'} ];
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title ? `${title} · ${site.name}` : site.name}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#edf3f1" />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" type="application/rss+xml" title={site.name} href="/rss.xml" />
+    <meta property="og:title" content={title ? `${title} · ${site.name}` : site.name} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site)} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到内容</a>
+    <aside class="sidebar">
+      <a href="/" class="brand"><span class="brand-symbol"><Icon name="leaf" size={25}/></span><span>余安<span class="brand-sub">的数字花园</span></span></a>
+      <button class="sidebar-search" data-search-open><Icon name="search" size={18} /><span>在花园里找找</span><kbd>⌘ K</kbd></button>
+      <nav aria-label="主导航">{navigation.map(item => <a class:list={['nav-link', { selected: active === item.key }]} href={item.url} aria-current={active === item.key ? 'page' : undefined}><Icon name={item.icon} /><span>{item.label}</span>{active === item.key && <span class="nav-dot"></span>}</a>)}</nav>
+      <div class="sidebar-bottom"><p><span class="living-dot"></span>保持好奇，慢慢生长</p><a href={site.github} target="_blank" rel="noopener noreferrer"><Icon name="github" size={18} />GitHub<Icon name="external" size={13} /></a></div>
+    </aside>
+    <div class="page-shell">
+      <header class="topbar"><span>{navigation.find(item => item.key === active)?.label ?? '花园'}<span class="topbar-separator">/</span><span class="topbar-note">一些记录，一些可能</span></span><a href={`${site.repo}/tree/main/src/content`} target="_blank" rel="noopener noreferrer" class="write-link"><Icon name="pen" size={16} />写点东西</a></header>
+      <main id="main"><slot /></main>
+      <footer class="footer"><span>© {new Date().getFullYear()} {site.author} · 这片花园还在生长</span><div><a href="/rss.xml">RSS</a><a href={site.repo} target="_blank" rel="noopener noreferrer">源码<Icon name="external" size={12}/></a></div></footer>
+    </div>
+    <dialog id="search-dialog" aria-labelledby="search-title">
+      <div class="search-top"><h2 id="search-title">在花园里找找</h2><button data-search-close class="icon-button" aria-label="关闭搜索"><Icon name="close" /></button></div>
+      <label class="search-input-wrap"><Icon name="search" /><input id="global-search" type="search" aria-label="搜索记录、想法和工具" placeholder="搜索记录、想法和工具…" autocomplete="off" /></label>
+      <p id="search-status" class="muted" role="status">输入关键词，发现一些关联。</p><ul id="search-results"></ul>
+    </dialog>
+    <script>
+      const dialog = document.querySelector<HTMLDialogElement>('#search-dialog')!;
+      const input = document.querySelector<HTMLInputElement>('#global-search')!;
+      const results = document.querySelector<HTMLUListElement>('#search-results')!;
+      const status = document.querySelector<HTMLParagraphElement>('#search-status')!;
+      type SearchEntry = { title: string; description: string; kind: string; url: string; text: string };
+      let index: SearchEntry[] | null = null;
+      let request: Promise<SearchEntry[]> | null = null;
+      async function loadIndex() {
+        if (index) return index;
+        if (!request) request = fetch('/search.json').then(r => { if (!r.ok) throw new Error('search'); return r.json(); }).then(data => index = data).finally(() => { request = null; });
+        return request;
+      }
+      let sequence = 0;
+      async function search() {
+        const current = ++sequence;
+        const query = input.value.trim().toLocaleLowerCase();
+        results.replaceChildren();
+        if (!query) { status.textContent = '输入关键词，发现一些关联。'; return; }
+        status.textContent = '正在查找…';
+        try {
+          const entries = await loadIndex();
+          if (current !== sequence) return;
+          const matches = entries.filter(entry => query.split(/\s+/).every(term => entry.text.toLocaleLowerCase().includes(term)));
+          status.textContent = matches.length ? `找到 ${matches.length} 条内容` : '暂时没有找到，试试其他关键词。';
+          for (const entry of matches.slice(0, 30)) {
+            const li = document.createElement('li'); const link = document.createElement('a');
+            link.href = entry.url; const label = document.createElement('small'); label.textContent = entry.kind;
+            const heading = document.createElement('strong'); heading.textContent = entry.title;
+            const desc = document.createElement('span'); desc.textContent = entry.description;
+            link.append(label, heading, desc); li.append(link); results.append(li);
+          }
+        } catch { if (current === sequence) status.textContent = '搜索暂时无法加载，请稍后重新输入关键词。'; }
+      }
+      function openSearch() { if (!dialog.open) dialog.showModal(); input.focus(); }
+      document.querySelectorAll('[data-search-open]').forEach(button => button.addEventListener('click', openSearch));
+      document.querySelector('[data-search-close]')?.addEventListener('click', () => dialog.close());
+      dialog.addEventListener('click', event => { if (event.target === dialog) { const r = dialog.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close(); } });
+      input.addEventListener('input', search);
+      document.addEventListener('keydown', event => { if ((event.metaKey || event.ctrlKey) && event.key === 'k') { event.preventDefault(); openSearch(); } });
+    </script>
+  </body>
+</html>

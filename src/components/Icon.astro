@@ -1,0 +1,23 @@
+---
+interface Props { name: string; size?: number; }
+const { name, size = 20 } = Astro.props;
+const paths: Record<string, string> = {
+  leaf: 'M20 4C10 2 3 6 4 13c1 6 8 8 12 3 3-4 4-8 4-12ZM4 21c1-7 5-11 11-13',
+  home: 'm3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9',
+  book: 'M4 4h6c2 0 2 2 2 2s0-2 2-2h6v15h-6c-2 0-2 2-2 2s0-2-2-2H4ZM12 6v15',
+  bulb: 'M9 18h6M10 21h4M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 2H9s0-1-1-2Z',
+  tools: 'M14 6a5 5 0 0 0-6 6L3 17a3 3 0 0 0 4 4l5-5a5 5 0 0 0 6-6l-3 3-4-4Z',
+  search: 'M20 20l-5-5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0',
+  arrow: 'M4 12h16m-6-6 6 6-6 6',
+  external: 'M14 3h7v7M21 3 10 14M10 3H3v18h18v-7',
+  github: 'M8 21v-4c-4 1-4-2-5-3m13 7v-4c0-1-1-2-1-2 4 0 6-2 6-5 0-2-1-3-2-4 0-1 0-3-1-4-2 0-3 2-3 2-2-1-4-1-6 0 0 0-1-2-3-2-1 1-1 3-1 4-1 1-2 2-2 4 0 3 2 5 6 5-1 1-1 2-1 2',
+  clock: 'M12 8v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
+  code: 'm8 6-6 6 6 6m8-12 6 6-6 6m-3-15-2 18',
+  link: 'm10 14 4-4M8 16l-1 1a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m2 1 1-1a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0',
+  pen: 'm15 4 5 5M3 21l2-6L17 3a3 3 0 0 1 4 4L9 19ZM3 21l6-2',
+  chevron: 'm9 5 7 7-7 7',
+  close: 'm6 6 12 12M18 6 6 18',
+  sun: 'M12 2v2m0 16v2M2 12h2m16 0h2M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
+};
+---
+<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={paths[name] ?? paths.leaf} /></svg>
