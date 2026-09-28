@@ -71,6 +71,35 @@ test('one-time owner setup, secure opaque cookie, password verification and logo
   db.close();
 });
 
+test('page authorization denies absent, forged, expired and logged-out sessions without exposing account data', async t => {
+  const { request, setup, dataDir } = await fixture(t);
+  const check = async (cookie, expectedStatus) => {
+    const response = await request('/api/auth/check', { cookie });
+    assert.equal(response.status, expectedStatus);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.equal(response.headers.get('set-cookie'), null);
+    assert.deepEqual(response.body, expectedStatus === 200 ? { ok: true } : { error: '请先登录。' });
+  };
+  await check(undefined, 401);
+  await check(`__Host-garden_session=${'x'.repeat(43)}`, 401);
+  const cookie = await setup();
+  const db = new DatabaseSync(join(dataDir, 'garden.sqlite'));
+  try {
+    const sessions = db.prepare('SELECT * FROM sessions').all();
+    await check(cookie, 200);
+    assert.deepEqual(db.prepare('SELECT * FROM sessions').all(), sessions);
+    db.prepare('UPDATE sessions SET expires_at=?').run(Date.now() - 1);
+    await check(cookie, 401);
+    assert.equal(db.prepare('SELECT count(*) AS n FROM sessions').get().n, 1);
+    const login = await request('/api/auth/login', { method: 'POST', body: { username: 'owner', password } });
+    assert.equal(login.status, 200);
+    const activeCookie = login.headers.get('set-cookie').split(';')[0];
+    await check(activeCookie, 200);
+    assert.equal((await request('/api/auth/logout', { method: 'POST', body: {}, cookie: activeCookie })).status, 200);
+    await check(activeCookie, 401);
+  } finally { db.close(); }
+});
+
 test('atomic version updates, validation, restart persistence and consistent backup', async t => {
   const { request, setup, dataDir, restart } = await fixture(t);
   const cookie = await setup();

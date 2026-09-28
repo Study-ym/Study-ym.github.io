@@ -5,7 +5,7 @@ import { site } from '../site';
 interface Props { title?: string; description?: string; active?: string; noindex?: boolean; }
 const { title, description = site.description, active = 'home', noindex = false } = Astro.props;
 const cloud = import.meta.env.PUBLIC_GARDEN_CLOUD === 'true';
-const navigation = [ { key:'home', url:'/', label:'花园', icon:'home' }, { key:'notes',url:'/notes/',label:'记录',icon:'book'}, {key:'ideas',url:'/ideas/',label:'Ideas',icon:'bulb'}, {key:'tools',url:'/tools/',label:'工具箱',icon:'tools'}, {key:'about',url:'/about/',label:'关于',icon:'leaf'}, ...(cloud ? [{key:'account',url:'/account/',label:'账号',icon:'book'}] : []) ];
+const navigation = [ { key:'home', url:'/', label:'花园', icon:'home' }, { key:'notes',url:'/notes/',label:'记录',icon:'book'}, {key:'ideas',url:'/ideas/',label:'Ideas',icon:'bulb'}, {key:'tools',url:'/tools/',label:'工具箱',icon:'tools'}, {key:'about',url:'/about/',label:'关于',icon:'leaf'}, {key:'private',url:cloud ? '/private/' : 'https://ymihh.xyz/private/',label:'私人空间',icon:'lock'} ];
 ---
 <!doctype html>
 <html lang="zh-CN">
@@ -33,7 +33,7 @@ const navigation = [ { key:'home', url:'/', label:'花园', icon:'home' }, { key
       <div class="sidebar-bottom"><a href={site.github} target="_blank" rel="noopener noreferrer"><Icon name="github" size={18} />GitHub<Icon name="external" size={13} /></a></div>
     </aside>
     <div class="page-shell">
-      <header class="topbar"><span>{navigation.find(item => item.key === active)?.label ?? '花园'}</span><a href={`${site.repo}/tree/main/src/content`} target="_blank" rel="noopener noreferrer" class="write-link"><Icon name="pen" size={16} />写点东西</a></header>
+      <header class="topbar"><span>{navigation.find(item => item.key === active)?.label ?? '花园'}</span>{active === 'private' && <a href="/account/" class="write-link"><Icon name="lock" size={16} />账号管理</a>}</header>
       <main id="main"><slot /></main>
       <footer class="footer"><span>© {new Date().getFullYear()} {site.author}</span><div><a href="/rss.xml">RSS</a><a href={site.repo} target="_blank" rel="noopener noreferrer">源码<Icon name="external" size={12}/></a></div></footer>
     </div>

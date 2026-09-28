@@ -107,6 +107,10 @@ export function createGardenServer({ dataDir, origin = 'https://ymihh.xyz', port
       const user = sessionUser(req);
       if (method === 'GET' && path === '/api/health') return send(200, { ok: true });
       if (method === 'GET' && path === '/api/session') return send(200, { user, setupRequired: !db.prepare('SELECT id FROM users LIMIT 1').get() });
+      if (method === 'GET' && path === '/api/auth/check') {
+        if (!user) throw new HttpError(401, '请先登录。');
+        return send(200, { ok: true });
+      }
       if (method === 'POST' && ['/api/auth/setup', '/api/auth/login'].includes(path)) {
         limitAuth();
         const body = await readJson(req);

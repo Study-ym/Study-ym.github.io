@@ -1,10 +1,10 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 ---
-<Layout title="账号" description="登录后保存私人记录。" active="account" noindex={true}>
+<Layout title="账号" description="登录后保存私人记录。" active="private" noindex={true}>
   <section class="account-page">
-    <h1 id="account-title">登录花园</h1>
-    <p id="account-intro">登录后，经期记录保存在你的服务器，换设备也能查看。</p>
+    <h1 id="account-title">登录私人空间</h1>
+    <p id="account-intro">登录后进入私人空间，查看和保存自己的记录。</p>
     <p id="account-status" role="status">正在连接服务器…</p>
     <form id="account-form" hidden>
       <label id="setup-token-label" hidden>首次设置码<input id="setup-token" autocomplete="off" type="password" /></label>
@@ -13,7 +13,7 @@ import Layout from '../../layouts/Layout.astro';
       <label id="password-confirm-label" hidden>再次输入密码<input id="password-confirm" autocomplete="new-password" type="password" maxlength="128" /></label>
       <button id="account-submit" type="submit">登录</button>
     </form>
-    <div id="account-signed-in" hidden><a class="button primary" href="/tools/cycle/">打开经期日历</a><button id="account-logout" type="button">退出登录</button></div>
+    <div id="account-signed-in" hidden><a class="button primary" id="account-continue" href="/private/">进入私人空间</a><button id="account-logout" type="button">退出登录</button></div>
     <p class="account-note">私人记录仅供当前账号访问。旧 GitHub 页面里的本地记录，可先导出备份，再到新日历中恢复。</p>
   </section>
 </Layout>
@@ -22,6 +22,10 @@ import Layout from '../../layouts/Layout.astro';
 </style>
 <script>
 import {api,cloudEnabled} from '../../lib/cloud';
+import { privateReturnPath } from '../../lib/private-routes.mjs';
+const requestedNext=new URLSearchParams(location.search).get('next');
+const returnPath=privateReturnPath(requestedNext);
+(document.getElementById('account-continue') as HTMLAnchorElement).href=returnPath;
 const el=(id:string)=>document.getElementById(id)!;
 const input=(id:string)=>el(id) as HTMLInputElement;
 let setup=false;
@@ -29,10 +33,11 @@ async function refresh(){
   if(!cloudEnabled){el('account-status').textContent='云端保存请到 ymihh.xyz 使用。当前页面仍可使用本地日历。';return;}
   try{
     const session=await api('/api/session');setup=session.setupRequired;
+    if(session.user&&requestedNext){location.replace(returnPath);return;}
     el('account-form').hidden=!!session.user;el('account-signed-in').hidden=!session.user;
     el('account-status').textContent=session.user?`已登录：${session.user.username}`:'';
-    el('account-title').textContent=setup?'设置私人账号':'登录花园';
-    el('account-intro').textContent=setup?'首次使用，请用设置码创建账号。请自己保管用户名和密码。':'登录后，经期记录保存在你的服务器，换设备也能查看。';
+    el('account-title').textContent=session.user?'账号管理':setup?'设置私人账号':'登录私人空间';
+    el('account-intro').textContent=setup?'首次使用，请用设置码创建账号。请自己保管用户名和密码。':'登录后进入私人空间，查看和保存自己的记录。';
     el('setup-token-label').hidden=!setup;el('password-confirm-label').hidden=!setup;
     input('setup-token').required=setup;input('password-confirm').required=setup;
     input('password').minLength=setup?12:1;input('password').autocomplete=setup?'new-password':'current-password';
@@ -45,7 +50,7 @@ el('account-form').addEventListener('submit',async e=>{
   try{
     if(setup&&input('password').value!==input('password-confirm').value)throw new Error('两次密码不一致。');
     await api(setup?'/api/auth/setup':'/api/auth/login',{method:'POST',body:JSON.stringify({username:input('username').value.trim(),password:input('password').value,...(setup?{token:input('setup-token').value.trim()}:{})})});
-    input('password').value='';input('password-confirm').value='';input('setup-token').value='';location.assign('/tools/cycle/');
+    input('password').value='';input('password-confirm').value='';input('setup-token').value='';location.assign(returnPath);
   }catch(error){el('account-status').textContent=(error as Error).message;}finally{button.disabled=false;}
 });
 el('account-logout').addEventListener('click',async()=>{try{await api('/api/auth/logout',{method:'POST',body:'{}'});try{localStorage.setItem('garden.auth.changed',String(Date.now()));}catch{}if('BroadcastChannel' in window){const channel=new BroadcastChannel('garden-auth');channel.postMessage('logout');channel.close();}location.reload();}catch(error){el('account-status').textContent=(error as Error).message;}});

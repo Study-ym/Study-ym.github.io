@@ -1,0 +1,5 @@
+---
+import CyclePage from '../../../components/CyclePage.astro';
+const cloud = import.meta.env.PUBLIC_GARDEN_CLOUD === 'true';
+---
+{cloud ? <CyclePage /> : <html lang="zh-CN"><head><meta charset="UTF-8" /><meta name="robots" content="noindex" /><title>私人空间</title></head><body><p>请到<a href="https://ymihh.xyz/private/cycle/">正式花园</a>使用私人日历。<a href="/tools/cycle/">打开旧本地日历导出备份</a>。</p></body></html>}

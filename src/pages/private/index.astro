@@ -1,0 +1,43 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Icon from '../../components/Icon.astro';
+import { site } from '../../site';
+---
+<Layout title="私人空间" description="登录后使用自己的私人功能。" active="private" noindex={true}>
+  <section class="private-space">
+    <header class="page-heading"><h1>私人空间</h1><p>自己的记录，留在这里。</p></header>
+    <div id="private-gate"><p id="private-status" role="status">正在确认登录状态…</p><a href="/private/">重新连接</a><noscript><p>请启用 JavaScript 后继续。</p></noscript></div>
+    <div id="private-content" hidden>
+      <p class="private-session"><Icon name="lock" size={15} /><span id="private-user"></span><span>仅当前账号可访问</span></p>
+      <a class="private-entry" href="/private/cycle/"><span><strong>月笺</strong><small>记录经期的开始和结束</small></span><Icon name="arrow" size={18} /></a>
+      <p class="private-note">这里的记录不会出现在公开花园或搜索中。</p>
+      <div class="private-management"><a href="/account/">账号与退出登录</a><a href={site.repo + '/tree/main/src/content'} target="_blank" rel="noopener noreferrer">编辑公开内容 <Icon name="external" size={12} /></a></div>
+    </div>
+  </section>
+</Layout>
+<style>
+.private-space{max-width:720px}.private-session{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:13px;margin:0 0 24px}.private-entry{display:flex;align-items:center;justify-content:space-between;padding:24px 0;border-top:1px solid var(--line,#e2e7e4);border-bottom:1px solid var(--line,#e2e7e4);text-decoration:none;color:inherit}.private-entry strong{display:block;font-size:20px}.private-entry small{display:block;color:var(--muted);margin-top:8px;font-size:14px}.private-entry:hover strong{color:var(--green,#216553)}.private-note{font-size:13px;color:var(--muted);margin-top:20px}.private-management{display:flex;gap:24px;flex-wrap:wrap;margin-top:44px;font-size:13px}.private-management a{display:inline-flex;gap:5px;align-items:center}#private-gate{color:var(--muted);line-height:1.8}[hidden]{display:none!important}
+</style>
+<script>
+import {api,cloudEnabled} from '../../lib/cloud';
+import {loginUrl} from '../../lib/private-routes.mjs';
+const content=document.getElementById('private-content')!;
+const gate=document.getElementById('private-gate')!;
+const status=document.getElementById('private-status')!;
+let epoch=0;
+function hide(){epoch++;content.hidden=true;gate.hidden=false;document.getElementById('private-user')!.textContent='';}
+function signedOut(){hide();location.replace(loginUrl('/private/'));}
+async function checkSession(){
+  if(!cloudEnabled){status.textContent='私人空间在正式花园中使用。';const link=gate.querySelector('a')!;link.href='https://ymihh.xyz/private/';link.textContent='进入正式花园';return;}
+  const current=++epoch;
+  try{const session=await api('/api/session');if(current!==epoch)return;if(!session.user){signedOut();return;}document.getElementById('private-user')!.textContent=session.user.username;gate.hidden=true;content.hidden=false;}
+  catch{if(current===epoch){hide();status.textContent='暂时无法连接，请重新连接后再查看。';}}
+}
+window.addEventListener('pagehide',hide);
+window.addEventListener('pageshow',()=>void checkSession());
+window.addEventListener('focus',()=>void checkSession());
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)void checkSession();});
+window.addEventListener('storage',event=>{if(event.key==='garden.auth.changed')signedOut();});
+if('BroadcastChannel' in window){const channel=new BroadcastChannel('garden-auth');channel.onmessage=event=>{if(event.data==='logout')signedOut();};}
+void checkSession();
+</script>

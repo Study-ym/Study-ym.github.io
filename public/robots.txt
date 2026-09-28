@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
+Disallow: /private/
+Disallow: /account/
+Disallow: /api/
+Disallow: /tools/cycle/
 
 Sitemap: https://ymihh.xyz/sitemap.xml

@@ -7,7 +7,8 @@
 - `/srv/garden/releases/<release>` 是不可变发布版本；`/srv/garden/current` 是当前版本软链接。
 - `/var/lib/garden/garden.sqlite` 是独立私有数据文件，仅 garden 服务用户可读写。数据库不能放在 dist、Git 或发布包里。
 - GitHub Actions 继续发布本地模式到 GitHub Pages，不会自动部署阿里云。阿里云使用下面的受控发布流程。
-- 页面主体公开；日期记录必须登录。当前仅一个自用账号；不是多用户服务。
+- 公开花园包含文章、Ideas和通用工具；私人空间 `/private/` 包含月笺 `/private/cycle/` 与账号管理入口。Nginx auth_request 通过 `/api/auth/check` 校验会话，未登录私人页面跳转账号页。数据API仍独立鉴权；页面设为no-store、noindex并排除公开搜索/sitemap。当前仅一个自用账号；不是多用户服务。
+- 原正式站 `/tools/cycle/` 跳转私人日历，数据库和账号不变。GitHub Pages该地址继续运行旧本地日历，供导出历史备份。
 - 日期数据通过 HTTPS `/api/` 写入；后端只监听127.0.0.1:8787，Nginx转发。API不写访问日志，程序不记录用户请求体。
 - 密钥、设置码和备份不提交Git。SSH私钥留在自己的电脑。公司Git/SSH配置不变。
 

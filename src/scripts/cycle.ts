@@ -1,4 +1,5 @@
 import {api, ApiError, cloudEnabled} from '../lib/cloud';
+import { loginUrl } from '../lib/private-routes.mjs';
 import { todayLocal, dayNumber, daysInclusive, validateRecords, parseBackup, makeBackup } from '../lib/cycle.mjs';
 
 type RecordEntry = { id: string; start: string; end: string | null };
@@ -29,12 +30,13 @@ async function loadCloudRecords(){
   if(epoch!==sessionEpoch)return;
   records=validateRecords(data.records,currentToday) as RecordEntry[];cloudVersion=data.version;
   lastRaw=`cloud:${cloudVersion}`;storageReady=true;element('storage-alert').hidden=true;
+  element('private-gate').hidden=true;element('private-content').hidden=false;
   cloudStatus('已与服务器同步');render();
 }
 async function refreshCloud(){
   if(cloudBusy)return;
   cloudBusy=true;
-  try{await loadCloudRecords();}catch(error){storageReady=false;cloudStatus('连接失败，点击同步重试');render();notify((error as Error).message);}finally{cloudBusy=false;}
+  try{await loadCloudRecords();}catch(error){if(error instanceof ApiError&&error.status===401){clearCloudSession();return;}storageReady=false;element('private-gate-status').textContent='暂时无法连接，请重新连接后再查看。';cloudStatus('连接失败，点击同步重试');render();notify((error as Error).message);}finally{cloudBusy=false;}
 }
 let editedRecord: RecordEntry | null = null;
 let undoSnapshot: RecordEntry[] | null = null;
@@ -295,10 +297,11 @@ document.addEventListener('visibilitychange',()=> {if(!document.hidden) checkDat
 loadRecords();render();
 
 if(cloudEnabled){
+  window.addEventListener('pagehide',()=>{sessionEpoch++;element('private-content').hidden=true;element('private-gate').hidden=false;document.querySelectorAll<HTMLDialogElement>('dialog[open]').forEach(sheet=>sheet.close());element('toast').hidden=true;undoSnapshot=null;editedRecord=null;field('record-start').value='';field('record-end').value='';element('import-preview').textContent='';});
   element('cloud-refresh').addEventListener('click',()=>{if(document.querySelector('dialog[open]'))return;void refreshCloud();});
   const checkSession=async()=>{if(!document.querySelector('dialog[open]')){void refreshCloud();return;}try{const state=await api('/api/session');if(!state.user)clearCloudSession();}catch{/* Preserve edits, never infer logout from a network error. */}};
   window.addEventListener('focus',()=>void checkSession());
-  window.addEventListener('pageshow',()=>void checkSession());
+  window.addEventListener('pageshow',event=>{if(event.persisted){location.reload();return;}void checkSession();});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)void checkSession();});
   if('BroadcastChannel' in window){const channel=new BroadcastChannel('garden-auth');channel.onmessage=event=>{if(event.data==='logout')clearCloudSession();};}
   void refreshCloud();
@@ -309,4 +312,5 @@ function clearCloudSession(){
   field('record-start').value='';field('record-end').value='';element('import-preview').textContent='';
   document.querySelectorAll<HTMLDialogElement>('dialog[open]').forEach(sheet=>sheet.close());
   element('toast').hidden=true;element('cloud-account').textContent='登录';cloudStatus('请登录后查看私人记录');render();
+  element('private-content').hidden=true;element('private-gate').hidden=false;location.replace(loginUrl('/private/cycle/'));
 }
