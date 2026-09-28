@@ -1,6 +1,7 @@
 ---
 import '../../../styles/cycle.css';
 import Icon from '../../../components/Icon.astro';
+const cloud = import.meta.env.PUBLIC_GARDEN_CLOUD === 'true';
 ---
 <!doctype html>
 <html lang="zh-CN">
@@ -8,18 +9,19 @@ import Icon from '../../../components/Icon.astro';
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>月笺 · 经期小日历</title>
-    <meta name="description" content="一张简单的经期日历。轻松记录开始与结束，数据只保存在当前浏览器。" />
+    <meta name="description" content="一张简单的经期日历，轻松记录开始与结束。" />
     <meta name="theme-color" content="#fbfafb" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="月笺" />
     <link rel="icon" type="image/svg+xml" href="/cycle-icon.svg" />
     <link rel="manifest" href="/cycle.webmanifest" />
-    <link rel="canonical" href="https://study-ym.github.io/tools/cycle/" />
+    <link rel="canonical" href="https://ymihh.xyz/tools/cycle/" />
   </head>
   <body>
     <main class="cycle-app">
       <header class="cycle-header"><a href="/" class="garden-back" aria-label="回到数字花园"><Icon name="arrow" size={18}/></a><a href="/tools/cycle/" class="cycle-brand"><span class="moon-mark"></span>月笺</a><button id="open-settings" class="quiet-button">设置</button></header>
       <section class="today-summary" aria-labelledby="summary-title"><div><p class="summary-date" id="today-label"></p><h1 id="summary-title">记下日期，就好。</h1><p id="summary-detail">开始和结束，都只需要轻点一下。</p></div><button class="cat-companion" id="cat-pet" aria-label="摸摸小猫"><img src="/images/cycle-cat.png" alt="" width="100" height="100"/><span id="cat-speech" role="status">喵，今天也陪着你。</span><span class="cat-shadow"></span></button></section>
+      {cloud && <div class="cloud-bar"><span id="cloud-status" role="status">正在连接…</span><a id="cloud-account" href="/account/">登录</a><button id="cloud-refresh" type="button">同步</button></div>}
       <p id="storage-alert" class="storage-alert" role="alert" hidden></p>
       <section class="calendar" aria-labelledby="month-title">
         <div class="calendar-toolbar"><div><h2 id="month-title"></h2><button id="back-today" class="today-button">回到今天</button></div><div class="month-arrows"><button id="previous-month" class="icon-button" aria-label="上个月"><Icon name="chevron" size={18}/></button><button id="next-month" class="icon-button" aria-label="下个月"><Icon name="chevron" size={18}/></button></div></div>
@@ -34,7 +36,7 @@ import Icon from '../../../components/Icon.astro';
         <p class="action-hint" id="action-hint">不需要填表，记下开始日期就好了。</p>
       </section>
       <div class="sub-actions"><button id="open-history"><Icon name="book" size={17}/>历次记录<span id="record-count"></span></button><button id="add-record"><Icon name="pen" size={17}/>补记一段</button></div>
-      <footer class="cycle-footer"><span class="local-dot"></span>仅保存在这个浏览器，不上传<button id="open-backup">备份</button></footer>
+      <footer class="cycle-footer"><span class="local-dot"></span>{cloud ? '私人账号 · 服务器保存' : '仅保存在这个浏览器，不上传'}<button id="open-backup">备份</button></footer>
       <div id="toast" class="toast" role="status" hidden><span id="toast-text"></span><button id="undo-action" hidden>撤销</button></div>
       <noscript><p class="storage-alert">日历需要启用 JavaScript 才能记录。此时没有保存任何数据。</p></noscript>
     </main>
@@ -58,9 +60,10 @@ import Icon from '../../../components/Icon.astro';
     <dialog id="settings-dialog" aria-labelledby="settings-title">
       <header class="sheet-header"><h2 id="settings-title">按你的习惯来</h2><button data-close="settings-dialog" class="icon-button" aria-label="关闭"><Icon name="close"/></button></header>
       <label class="setting-row"><span><strong>小猫陪伴</strong><small>安静待着，摸一摸才回应</small></span><input id="cat-toggle" type="checkbox" role="switch" checked/></label>
-      <div class="settings-section"><h3>保存与备份</h3><p>日期只保存在当前浏览器中。其他设备不会自动同步；清理网站数据、使用无痕模式或换手机，都可能失去记录。</p><p>备份文件包含经期日期，请保存在你自己的位置。恢复时会先预览，不会直接覆盖。</p><div class="settings-buttons"><button id="export-data" class="outline-button">导出备份</button><button id="import-data" class="outline-button">恢复备份</button></div><input type="file" id="import-file" accept="application/json,.json" hidden/><p id="backup-status" class="form-error" role="status"></p></div>
+      <div class="settings-section"><h3>保存与备份</h3>{cloud ? <p>登录后，日期保存到你的花园服务器。换设备登录同一账号即可查看。只有出现「已保存到服务器」才代表本次保存完成；联网失败时可点「同步」核对。</p> : <p>日期只保存在当前浏览器中。其他设备不会自动同步；清理网站数据、使用无痕模式或换手机，都可能失去记录。</p>}<p>备份文件包含经期日期，请保存在你自己的位置。恢复时会先预览，确认后替换当前记录。</p><div class="settings-buttons"><button id="export-data" class="outline-button">导出备份</button><button id="import-data" class="outline-button">恢复备份</button></div><input type="file" id="import-file" accept="application/json,.json" hidden/><p id="backup-status" class="form-error" role="status"></p></div>
+      {cloud && <div class="settings-section"><h3>从旧版迁移</h3><p>在旧 GitHub 日历的设置里导出备份，再来这里恢复。两个域名不会自动共享浏览器里的记录。</p><a href="https://study-ym.github.io/tools/cycle/" target="_blank" rel="noopener">打开旧版本导出备份 ↗</a><p><a href="/account/">账号与退出登录</a></p></div>}
       <div class="settings-section"><h3>更方便地打开</h3><p>可以从手机浏览器菜单把这页添加到主屏幕。以后用同一浏览器或主屏幕入口打开；首次使用新入口时，先确认能看到原有记录。</p><p class="small-note">页面加载需要网络。这里不做经期、排卵或安全期预测。</p></div>
-      <button id="erase-data" class="danger-button">清除这台设备的记录</button>
+      <button id="erase-data" class="danger-button">{cloud ? '清空此账号的经期记录' : '清除这台设备的记录'}</button>
     </dialog>
 
     <dialog id="confirm-dialog" aria-labelledby="confirm-title">

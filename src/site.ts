@@ -3,7 +3,7 @@ export const site = {
   author: '余安',
   github: 'https://github.com/Study-ym',
   repo: 'https://github.com/Study-ym/Study-ym.github.io',
-  description: '记录遇见的事、还在生长的想法，以及亲手做的小工具。',
+  description: '记录生活与学习，整理想法，做些日常用得上的小工具。',
 };
 
 export const stages = {

@@ -1,0 +1,14 @@
+[Unit]
+Description=Consistent garden database backup
+After=garden.service
+
+[Service]
+Type=oneshot
+User=garden
+Group=garden
+Environment=GARDEN_DATA_DIR=/var/lib/garden
+ExecStart=/usr/bin/node /srv/garden/current/server/backup-daily.mjs
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/garden

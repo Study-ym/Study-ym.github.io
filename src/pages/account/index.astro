@@ -1,0 +1,53 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+<Layout title="账号" description="登录后保存私人记录。" active="account" noindex={true}>
+  <section class="account-page">
+    <h1 id="account-title">登录花园</h1>
+    <p id="account-intro">登录后，经期记录保存在你的服务器，换设备也能查看。</p>
+    <p id="account-status" role="status">正在连接服务器…</p>
+    <form id="account-form" hidden>
+      <label id="setup-token-label" hidden>首次设置码<input id="setup-token" autocomplete="off" type="password" /></label>
+      <label>用户名<input id="username" autocomplete="username" required minlength="3" maxlength="40" pattern="[A-Za-z0-9_-]+" /><small>3–40 位字母、数字、下划线或短横线。</small></label>
+      <label>密码<input id="password" autocomplete="current-password" type="password" required maxlength="128" /></label>
+      <label id="password-confirm-label" hidden>再次输入密码<input id="password-confirm" autocomplete="new-password" type="password" maxlength="128" /></label>
+      <button id="account-submit" type="submit">登录</button>
+    </form>
+    <div id="account-signed-in" hidden><a class="button primary" href="/tools/cycle/">打开经期日历</a><button id="account-logout" type="button">退出登录</button></div>
+    <p class="account-note">私人记录仅供当前账号访问。旧 GitHub 页面里的本地记录，可先导出备份，再到新日历中恢复。</p>
+  </section>
+</Layout>
+<style>
+.account-page{max-width:440px;margin:24px auto}.account-page h1{font-size:28px;margin-bottom:12px}.account-page p{line-height:1.8;color:var(--muted,#63736e)}#account-status{min-height:28px;margin:20px 0;font-size:14px}.account-page label{display:block;margin:18px 0;font-size:14px}.account-page input{display:block;box-sizing:border-box;width:100%;padding:12px;margin-top:8px;border:1px solid #d8dfdc;border-radius:6px;background:white;color:#203a31;font-size:16px}.account-page small{display:block;font-size:12px;color:#63736e;margin-top:5px}.account-page button,.account-page .button{display:inline-block;border:1px solid #216553;border-radius:6px;padding:11px 18px;cursor:pointer;background:#216553;color:white;text-decoration:none;font:inherit}.account-page button:disabled{opacity:.5;cursor:wait}#account-logout{background:white;color:#216553;margin:12px 0}.account-note{border-top:1px solid #e2e7e4;padding-top:20px;margin-top:30px;font-size:12px}[hidden]{display:none!important}
+</style>
+<script>
+import {api,cloudEnabled} from '../../lib/cloud';
+const el=(id:string)=>document.getElementById(id)!;
+const input=(id:string)=>el(id) as HTMLInputElement;
+let setup=false;
+async function refresh(){
+  if(!cloudEnabled){el('account-status').textContent='云端保存请到 ymihh.xyz 使用。当前页面仍可使用本地日历。';return;}
+  try{
+    const session=await api('/api/session');setup=session.setupRequired;
+    el('account-form').hidden=!!session.user;el('account-signed-in').hidden=!session.user;
+    el('account-status').textContent=session.user?`已登录：${session.user.username}`:'';
+    el('account-title').textContent=setup?'设置私人账号':'登录花园';
+    el('account-intro').textContent=setup?'首次使用，请用设置码创建账号。请自己保管用户名和密码。':'登录后，经期记录保存在你的服务器，换设备也能查看。';
+    el('setup-token-label').hidden=!setup;el('password-confirm-label').hidden=!setup;
+    input('setup-token').required=setup;input('password-confirm').required=setup;
+    input('password').minLength=setup?12:1;input('password').autocomplete=setup?'new-password':'current-password';
+    el('account-submit').textContent=setup?'创建账号':'登录';
+
+  }catch(error){el('account-status').textContent=`暂时无法连接：${(error as Error).message}。请刷新重试。`;}
+}
+el('account-form').addEventListener('submit',async e=>{
+  e.preventDefault();const button=el('account-submit') as HTMLButtonElement;button.disabled=true;
+  try{
+    if(setup&&input('password').value!==input('password-confirm').value)throw new Error('两次密码不一致。');
+    await api(setup?'/api/auth/setup':'/api/auth/login',{method:'POST',body:JSON.stringify({username:input('username').value.trim(),password:input('password').value,...(setup?{token:input('setup-token').value.trim()}:{})})});
+    input('password').value='';input('password-confirm').value='';input('setup-token').value='';location.assign('/tools/cycle/');
+  }catch(error){el('account-status').textContent=(error as Error).message;}finally{button.disabled=false;}
+});
+el('account-logout').addEventListener('click',async()=>{try{await api('/api/auth/logout',{method:'POST',body:'{}'});try{localStorage.setItem('garden.auth.changed',String(Date.now()));}catch{}if('BroadcastChannel' in window){const channel=new BroadcastChannel('garden-auth');channel.postMessage('logout');channel.close();}location.reload();}catch(error){el('account-status').textContent=(error as Error).message;}});
+void refresh();
+</script>

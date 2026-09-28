@@ -1,6 +1,6 @@
 # 余安的数字花园
 
-记录、Ideas 和可以直接使用的小工具。Astro 静态网站，Markdown 管理内容，通过 GitHub Actions 发布到 [study-ym.github.io](https://study-ym.github.io)。
+记录、Ideas 和可以直接使用的小工具。Astro 静态网站，Markdown 管理内容，代码保存在 GitHub，正式网站部署在阿里云 [ymihh.xyz](https://ymihh.xyz)。GitHub Pages 保留为静态备用版本。
 
 ## 本地启动
 
@@ -57,13 +57,15 @@ Ideas 使用 `status: idea` / `doing` / `done`，不需要 `stage`。文件名�
 
 ### 月笺 · 极简经期日历
 
-入口：[月笺](https://study-ym.github.io/tools/cycle/)。一键记录开始、结束；点日期可以补记，历次记录里可以修改。小猫陪伴可在设置中开关。
+入口：[月笺](https://ymihh.xyz/tools/cycle/)。一键记录开始、结束；点日期可以补记，历次记录里可以修改。小猫陪伴可在设置中开关。
 
-日期只保存在当前浏览器的 localStorage，不上传 GitHub 或服务器，没有账号和设备同步。换浏览器、换手机或清除网站数据前，请在设置中导出 JSON 备份；恢复前会检查日期并预览，确认后替换当前记录。备份包含私人日期，请自行妥善保存。页面可以添加到手机主屏幕，加载页面仍需要网络。
+正式站登录后保存到阿里云服务器的私有 SQLite 数据库；当前版本是一个家庭自用账号，没有公开注册、多用户或共享权限系统。页面显示“已保存到服务器”后才算保存成功；其他设备登录同一账号，打开或点击“同步”即可查看。冲突会拒绝覆盖，提示先核对最新记录。
+
+GitHub Pages 备用站仍是本地模式，不会上传其浏览器旧记录。迁移方法：在旧站设置中导出 JSON，再登录新站导入；导入先校验和预览，确认后替换。备份包含私人日期，请妥善保存。页面可添加到手机主屏幕，使用服务器保存需要网络。
 
 只记录日期和历史间隔，不提供经期、排卵或安全期预测。小猫图片随站点提供，不加载第三方插件或脚本。
 
-## 第一次发布
+## GitHub Pages 备用发布
 
 1. 仓库 **Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**。
 2. 将代码推送到 `main`。
@@ -87,4 +89,4 @@ Ideas 使用 `status: idea` / `doing` / `done`，不需要 `stage`。文件名�
 | `src/layouts/Layout.astro` | 导航、页脚、全站搜索 |
 | `src/styles/global.css` | 样式与响应式布局 |
 
-当前版本不包含私密空间、网站内登录编辑、评论或数据库。内容从仓库发布，访客不能修改站点内容。
+公开文章和 Ideas 仍从 Git 仓库发布，访客不能修改公开内容。私有经期数据独立保存，不进入公开搜索或 RSS。正式服务器部署、回滚、备份及首次账号设置见 [部署说明](deploy/README.md)，API 协议见 [后端说明](server/README.md)。

@@ -4,7 +4,8 @@ import Icon from '../components/Icon.astro';
 import { site } from '../site';
 interface Props { title?: string; description?: string; active?: string; noindex?: boolean; }
 const { title, description = site.description, active = 'home', noindex = false } = Astro.props;
-const navigation = [ { key:'home', url:'/', label:'花园', icon:'home' }, { key:'notes',url:'/notes/',label:'记录',icon:'book'}, {key:'ideas',url:'/ideas/',label:'Ideas',icon:'bulb'}, {key:'tools',url:'/tools/',label:'工具箱',icon:'tools'}, {key:'about',url:'/about/',label:'关于',icon:'leaf'} ];
+const cloud = import.meta.env.PUBLIC_GARDEN_CLOUD === 'true';
+const navigation = [ { key:'home', url:'/', label:'花园', icon:'home' }, { key:'notes',url:'/notes/',label:'记录',icon:'book'}, {key:'ideas',url:'/ideas/',label:'Ideas',icon:'bulb'}, {key:'tools',url:'/tools/',label:'工具箱',icon:'tools'}, {key:'about',url:'/about/',label:'关于',icon:'leaf'}, ...(cloud ? [{key:'account',url:'/account/',label:'账号',icon:'book'}] : []) ];
 ---
 <!doctype html>
 <html lang="zh-CN">
@@ -13,7 +14,7 @@ const navigation = [ { key:'home', url:'/', label:'花园', icon:'home' }, { key
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title ? `${title} · ${site.name}` : site.name}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#edf3f1" />
+    <meta name="theme-color" content="#ffffff" />
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -27,19 +28,19 @@ const navigation = [ { key:'home', url:'/', label:'花园', icon:'home' }, { key
     <a class="skip-link" href="#main">跳到内容</a>
     <aside class="sidebar">
       <a href="/" class="brand"><span class="brand-symbol"><Icon name="leaf" size={25}/></span><span>余安<span class="brand-sub">的数字花园</span></span></a>
-      <button class="sidebar-search" data-search-open><Icon name="search" size={18} /><span>在花园里找找</span><kbd>⌘ K</kbd></button>
+      <button class="sidebar-search" data-search-open><Icon name="search" size={18} /><span>搜索花园</span><kbd>⌘ K</kbd></button>
       <nav aria-label="主导航">{navigation.map(item => <a class:list={['nav-link', { selected: active === item.key }]} href={item.url} aria-current={active === item.key ? 'page' : undefined}><Icon name={item.icon} /><span>{item.label}</span>{active === item.key && <span class="nav-dot"></span>}</a>)}</nav>
-      <div class="sidebar-bottom"><p><span class="living-dot"></span>保持好奇，慢慢生长</p><a href={site.github} target="_blank" rel="noopener noreferrer"><Icon name="github" size={18} />GitHub<Icon name="external" size={13} /></a></div>
+      <div class="sidebar-bottom"><a href={site.github} target="_blank" rel="noopener noreferrer"><Icon name="github" size={18} />GitHub<Icon name="external" size={13} /></a></div>
     </aside>
     <div class="page-shell">
-      <header class="topbar"><span>{navigation.find(item => item.key === active)?.label ?? '花园'}<span class="topbar-separator">/</span><span class="topbar-note">一些记录，一些可能</span></span><a href={`${site.repo}/tree/main/src/content`} target="_blank" rel="noopener noreferrer" class="write-link"><Icon name="pen" size={16} />写点东西</a></header>
+      <header class="topbar"><span>{navigation.find(item => item.key === active)?.label ?? '花园'}</span><a href={`${site.repo}/tree/main/src/content`} target="_blank" rel="noopener noreferrer" class="write-link"><Icon name="pen" size={16} />写点东西</a></header>
       <main id="main"><slot /></main>
-      <footer class="footer"><span>© {new Date().getFullYear()} {site.author} · 这片花园还在生长</span><div><a href="/rss.xml">RSS</a><a href={site.repo} target="_blank" rel="noopener noreferrer">源码<Icon name="external" size={12}/></a></div></footer>
+      <footer class="footer"><span>© {new Date().getFullYear()} {site.author}</span><div><a href="/rss.xml">RSS</a><a href={site.repo} target="_blank" rel="noopener noreferrer">源码<Icon name="external" size={12}/></a></div></footer>
     </div>
     <dialog id="search-dialog" aria-labelledby="search-title">
-      <div class="search-top"><h2 id="search-title">在花园里找找</h2><button data-search-close class="icon-button" aria-label="关闭搜索"><Icon name="close" /></button></div>
+      <div class="search-top"><h2 id="search-title">搜索花园</h2><button data-search-close class="icon-button" aria-label="关闭搜索"><Icon name="close" /></button></div>
       <label class="search-input-wrap"><Icon name="search" /><input id="global-search" type="search" aria-label="搜索记录、想法和工具" placeholder="搜索记录、想法和工具…" autocomplete="off" /></label>
-      <p id="search-status" class="muted" role="status">输入关键词，发现一些关联。</p><ul id="search-results"></ul>
+      <p id="search-status" class="muted" role="status">输入关键词搜索记录、想法和工具。</p><ul id="search-results"></ul>
     </dialog>
     <script>
       const dialog = document.querySelector<HTMLDialogElement>('#search-dialog')!;
@@ -59,7 +60,7 @@ const navigation = [ { key:'home', url:'/', label:'花园', icon:'home' }, { key
         const current = ++sequence;
         const query = input.value.trim().toLocaleLowerCase();
         results.replaceChildren();
-        if (!query) { status.textContent = '输入关键词，发现一些关联。'; return; }
+        if (!query) { status.textContent = '输入关键词搜索记录、想法和工具。'; return; }
         status.textContent = '正在查找…';
         try {
           const entries = await loadIndex();

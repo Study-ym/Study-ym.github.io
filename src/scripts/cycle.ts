@@ -1,3 +1,4 @@
+import {api, ApiError, cloudEnabled} from '../lib/cloud';
 import { todayLocal, dayNumber, daysInclusive, validateRecords, parseBackup, makeBackup } from '../lib/cycle.mjs';
 
 type RecordEntry = { id: string; start: string; end: string | null };
@@ -11,7 +12,30 @@ let currentToday = todayLocal();
 let selectedDate = currentToday;
 let visibleMonth = currentToday.slice(0, 7);
 let lastRaw: string | null = null;
-let storageReady = true;
+let storageReady = !cloudEnabled;
+let cloudVersion = 0;
+let cloudUser: string | null = null;
+let cloudBusy = false;
+let sessionEpoch = 0;
+function cloudStatus(message:string){if(cloudEnabled)element('cloud-status').textContent=message;}
+async function loadCloudRecords(){
+  const epoch=sessionEpoch;
+  const session=await api('/api/session');
+  if(epoch!==sessionEpoch)return;
+  cloudUser=session.user?.username ?? null;
+  element('cloud-account').textContent=cloudUser ? `账号：${cloudUser}` : session.setupRequired ? '设置账号' : '登录';
+  if(!cloudUser){clearCloudSession();cloudStatus(session.setupRequired?'请先设置私人账号':'登录后保存和查看记录');render();return;}
+  const data=await api('/api/cycle');
+  if(epoch!==sessionEpoch)return;
+  records=validateRecords(data.records,currentToday) as RecordEntry[];cloudVersion=data.version;
+  lastRaw=`cloud:${cloudVersion}`;storageReady=true;element('storage-alert').hidden=true;
+  cloudStatus('已与服务器同步');render();
+}
+async function refreshCloud(){
+  if(cloudBusy)return;
+  cloudBusy=true;
+  try{await loadCloudRecords();}catch(error){storageReady=false;cloudStatus('连接失败，点击同步重试');render();notify((error as Error).message);}finally{cloudBusy=false;}
+}
 let editedRecord: RecordEntry | null = null;
 let undoSnapshot: RecordEntry[] | null = null;
 let undoExpected: string | null = null;
@@ -35,6 +59,7 @@ function storageError(message: string) {
   element('storage-alert').textContent = `${message}\n现有内容不会被覆盖。请先在「设置」中导出备份。`;
 }
 function loadRecords() {
+  if(cloudEnabled)return;
   try {
     lastRaw = localStorage.getItem(STORAGE_KEY);
     records = lastRaw === null ? [] : parseBackup(lastRaw, currentToday);
@@ -46,7 +71,23 @@ async function withRecordLock<T>(action: () => T): Promise<T> {
   return navigator.locks.request(STORAGE_KEY, action);
 }
 async function persist(next: RecordEntry[]): Promise<boolean> {
-  if (!storageReady) { notify('当前无法安全保存，请先处理页面上的存储提示。'); return false; }
+  if (!storageReady) { throw new Error(cloudEnabled?'请先登录并同步记录，再保存。':'当前无法安全保存，请先处理页面上的存储提示。'); }
+  if(cloudEnabled){
+    if(cloudBusy)throw new Error('正在同步，请稍后再试。');
+    const clean=validateRecords(next,currentToday) as RecordEntry[];
+    const epoch=sessionEpoch;cloudBusy=true;cloudStatus('正在保存…');
+    try{
+      const data=await api('/api/cycle',{method:'PUT',body:JSON.stringify({version:cloudVersion,records:clean})});
+      if(epoch!==sessionEpoch)throw new Error('登录状态已经改变，请重新登录并同步。');
+      records=validateRecords(data.records,currentToday) as RecordEntry[];cloudVersion=data.version;lastRaw=`cloud:${cloudVersion}`;
+      render();cloudStatus('已保存到服务器');return true;
+    }catch(error){
+      if(error instanceof ApiError&&error.status===409){try{await loadCloudRecords();}catch{storageReady=false;cloudStatus('冲突后同步失败，点击同步重试');render();throw new Error('其他设备修改了记录，但最新内容暂时无法读取。请联网后点同步，再核对操作。');}throw new Error('记录已在其他设备改变，已同步最新内容。请核对后重新操作。');}
+      if(error instanceof ApiError&&error.status===401){clearCloudSession();cloudStatus('登录已过期，请重新登录');}
+      else cloudStatus('保存未确认，请点同步核对后重试');
+      throw error;
+    }finally{cloudBusy=false;}
+  }
   const expectedRaw = lastRaw;
   try { return await withRecordLock(() => {
     if (localStorage.getItem(STORAGE_KEY) !== expectedRaw) {
@@ -128,7 +169,7 @@ function render() {
   element<HTMLButtonElement>('history-add').disabled = !storageReady;
 }
 function openEditor(record: RecordEntry | null = null) {
-  if (!storageReady) { notify('请先处理本地存储提示。'); return; }
+  if (!storageReady) { notify(cloudEnabled?'请先登录并同步记录。':'请先处理本地存储提示。'); return; }
   editedRecord = record ? {...record} : null;
   element('edit-title').textContent = record ? '修改这次记录' : '补记一段经期';
   field('record-start').value = record?.start ?? selectedDate;
@@ -199,10 +240,11 @@ function download(text:string,filename:string) {
 }
 element('export-data').addEventListener('click',()=> {
   try {
-    if (!storageReady) {
+    if (!storageReady && !cloudEnabled) {
       if (lastRaw===null) throw new Error('没有可读取的本地数据，暂时无法导出。');
       download(lastRaw,`月笺-原始数据-${currentToday}.json`);element('backup-status').textContent='已发起原始数据下载。此文件可能损坏，请保留用于恢复排查。';return;
     }
+    if(cloudEnabled&&!storageReady)throw new Error('请先登录并同步，才能导出服务器记录。');
     download(makeBackup(records,currentToday),`月笺-备份-${currentToday}.json`);element('backup-status').textContent=`已发起 ${records.length} 条记录的下载，请确认备份文件已保存。`;
   } catch(error) {element('backup-status').textContent=(error as Error).message;}
 });
@@ -210,12 +252,12 @@ element('import-data').addEventListener('click',()=>field('import-file').click()
 field('import-file').addEventListener('change',async()=> {
   const file=field('import-file').files?.[0];field('import-file').value='';if (!file) return;
   try {
-    if (!storageReady) throw new Error('请先导出并处理当前无法读取的本地数据，再恢复备份。');
+    if (!storageReady) throw new Error(cloudEnabled?'请先登录并同步，再恢复备份。':'请先导出并处理当前无法读取的本地数据，再恢复备份。');
     if(file.size>1024*1024) throw new Error('文件大于 1 MB，请选择本工具导出的备份文件。');
     const imported=parseBackup(await file.text(),currentToday) as RecordEntry[];
     const expectedRaw=lastRaw;
     const preview=imported.length ? `${imported.length} 条记录\n最早开始：${prettyDate(imported[imported.length-1].start,true)}\n最近开始：${prettyDate(imported[0].start,true)}` : '这个备份中没有记录。恢复后当前记录会清空。';
-    confirm('恢复这份备份？',`恢复会替换这个浏览器现有的 ${records.length} 条记录。建议先导出当前记录。`,'恢复并替换',async()=> {
+    confirm('恢复这份备份？',`恢复会替换${cloudEnabled?'当前账号':'这个浏览器'}现有的 ${records.length} 条记录。建议先导出当前记录。`,'恢复并替换',async()=> {
       if(lastRaw!==expectedRaw) throw new Error('本地记录已经改变，请取消并重新导入。');
       const previous=records.map(record=>({...record}));if(!await persist(imported)) return false;
       dialog('settings-dialog').close();notify(`已恢复 ${imported.length} 条记录。`,previous);return true;
@@ -224,6 +266,13 @@ field('import-file').addEventListener('change',async()=> {
 });
 element('erase-data').addEventListener('click',()=> {
   const expectedRaw=lastRaw;
+  if(cloudEnabled){
+    if(!storageReady){notify('请先登录并同步。');return;}
+    confirm('清空此账号的经期记录？','这会清空服务器上的经期记录，其他设备同步后也会清空。请先导出备份。','清空记录',async()=>{
+      if(lastRaw!==expectedRaw)throw new Error('记录发生变化，请关闭后重新核对。');
+      const previous=records.map(record=>({...record}));await persist([]);dialog('settings-dialog').close();notify('服务器记录已清空。',previous);return true;
+    });return;
+  }
   confirm('清除这台设备的记录？','此操作不能从页面撤销。请先导出备份；其他设备和已经下载的备份不会被删除。','清除记录',async()=> withRecordLock(() => {
     if(localStorage.getItem(STORAGE_KEY)!==expectedRaw) throw new Error('另一页面更改了记录，请取消后刷新再试。');
     localStorage.removeItem(STORAGE_KEY);lastRaw=null;records=[];storageReady=true;element('storage-alert').hidden=true;
@@ -237,9 +286,27 @@ field('cat-toggle').addEventListener('change',()=> {renderCat();try{localStorage
 const catMessages=['喵，我在这里。','今天也陪着你。','摸摸，慢慢来。','收到一份猫猫贴贴。'];let catCount=0;
 element('cat-pet').addEventListener('click',()=> {clearTimeout(catTimer);element('cat-speech').textContent=catMessages[catCount++%catMessages.length];element('cat-pet').classList.remove('is-petted');requestAnimationFrame(()=>element('cat-pet').classList.add('is-petted'));catTimer=setTimeout(()=>element('cat-pet').classList.remove('is-petted'),2800);});
 window.addEventListener('storage',event=> {
-  if(event.key===STORAGE_KEY || event.key===null){loadRecords();undoSnapshot=null;render();notify('已同步另一页面的记录变化。');}
+  if(cloudEnabled&&event.key==='garden.auth.changed'){clearCloudSession();}
+  if(!cloudEnabled&&(event.key===STORAGE_KEY || event.key===null)){loadRecords();undoSnapshot=null;render();notify('已同步另一页面的记录变化。');}
   if(event.key===CAT_KEY || event.key===null){try{field('cat-toggle').checked=localStorage.getItem(CAT_KEY)!=='off';renderCat();}catch{/* Preference unavailable. */}}
 });
 function checkDate(){const date=todayLocal();if(date!==currentToday){const wasToday=selectedDate===currentToday;currentToday=date;if(wasToday){selectedDate=date;visibleMonth=date.slice(0,7);}loadRecords();render();}}
 document.addEventListener('visibilitychange',()=> {if(!document.hidden) checkDate();});window.addEventListener('focus',checkDate);setInterval(checkDate,60000);
 loadRecords();render();
+
+if(cloudEnabled){
+  element('cloud-refresh').addEventListener('click',()=>{if(document.querySelector('dialog[open]'))return;void refreshCloud();});
+  const checkSession=async()=>{if(!document.querySelector('dialog[open]')){void refreshCloud();return;}try{const state=await api('/api/session');if(!state.user)clearCloudSession();}catch{/* Preserve edits, never infer logout from a network error. */}};
+  window.addEventListener('focus',()=>void checkSession());
+  window.addEventListener('pageshow',()=>void checkSession());
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)void checkSession();});
+  if('BroadcastChannel' in window){const channel=new BroadcastChannel('garden-auth');channel.onmessage=event=>{if(event.data==='logout')clearCloudSession();};}
+  void refreshCloud();
+}
+
+function clearCloudSession(){
+  sessionEpoch++;records=[];lastRaw=null;cloudUser=null;storageReady=false;undoSnapshot=null;editedRecord=null;
+  field('record-start').value='';field('record-end').value='';element('import-preview').textContent='';
+  document.querySelectorAll<HTMLDialogElement>('dialog[open]').forEach(sheet=>sheet.close());
+  element('toast').hidden=true;element('cloud-account').textContent='登录';cloudStatus('请登录后查看私人记录');render();
+}
