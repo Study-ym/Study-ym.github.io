@@ -53,7 +53,15 @@ Ideas 使用 `status: idea` / `doing` / `done`，不需要 `stage`。文件名�
 - 时间戳：秒/毫秒转日期，同时展示 UTC 和本地时区；本地日期转时间戳。
 - URL：`encodeURIComponent` / `decodeURIComponent`，用于参数值，不是保留完整 URL 分隔符的 `encodeURI`。
 
-输入仅在浏览器内处理，不发送到服务器，也不写入浏览器存储。
+以上三个工具的输入仅在浏览器内处理，不发送到服务器，也不写入浏览器存储。
+
+### 月笺 · 极简经期日历
+
+入口：[月笺](https://study-ym.github.io/tools/cycle/)。一键记录开始、结束；点日期可以补记，历次记录里可以修改。小猫陪伴可在设置中开关。
+
+日期只保存在当前浏览器的 localStorage，不上传 GitHub 或服务器，没有账号和设备同步。换浏览器、换手机或清除网站数据前，请在设置中导出 JSON 备份；恢复前会检查日期并预览，确认后替换当前记录。备份包含私人日期，请自行妥善保存。页面可以添加到手机主屏幕，加载页面仍需要网络。
+
+只记录日期和历史间隔，不提供经期、排卵或安全期预测。小猫图片随站点提供，不加载第三方插件或脚本。
 
 ## 第一次发布
 
@@ -73,6 +81,9 @@ Ideas 使用 `status: idea` / `doing` / `done`，不需要 `stage`。文件名�
 | `src/lib/content.ts` | 公共内容筛选，统一排除草稿 |
 | `src/pages/tools/index.astro` | 工具交互 |
 | `src/lib/tools.mjs` | 工具纯函数 |
+| `src/pages/tools/cycle/index.astro` | 月笺独立手机页面 |
+| `src/scripts/cycle.ts` | 月笺交互、本地保存与备份 |
+| `src/lib/cycle.mjs` | 日期、重叠检查与备份校验 |
 | `src/layouts/Layout.astro` | 导航、页脚、全站搜索 |
 | `src/styles/global.css` | 样式与响应式布局 |
 

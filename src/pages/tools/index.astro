@@ -5,6 +5,7 @@ import Icon from '../../components/Icon.astro';
 <Layout title="工具箱" active="tools">
   <div class="tools-page">
     <header class="page-heading"><h1>顺手的小工具</h1><p>把重复的小事交给工具，留些时间给有意思的事。</p></header>
+    <a class="tool-tile" href="/tools/cycle/" style="margin-bottom:24px"><span><Icon name="leaf"/></span><div><h3>月笺 · 经期小日历</h3><p>轻记开始与结束。独立手机页面，可开关的小猫陪伴。</p></div><Icon name="arrow" size={17}/></a>
     <div class="tool-tabs" role="tablist" aria-label="选择工具">
       <button class="tool-tab" id="tab-json" role="tab" aria-controls="panel-json" aria-selected="true" data-tool="json"><Icon name="code"/>JSON 整理</button>
       <button class="tool-tab" id="tab-time" role="tab" aria-controls="panel-time" aria-selected="false" tabindex="-1" data-tool="time"><Icon name="clock"/>时间戳转换</button>
@@ -32,7 +33,7 @@ import Icon from '../../components/Icon.astro';
       <div class="tool-actions"><button class="button" id="url-encode">编码</button><button class="button secondary" id="url-decode">解码</button><button class="button secondary" id="url-copy">复制结果</button><button class="button quiet" id="url-clear">清空</button></div>
       <label class="field-label" for="url-output">结果</label><textarea id="url-output" readonly spellcheck="false" placeholder="处理后的结果" style="min-height:130px"></textarea><p class="tool-status" id="url-status" role="status">等待输入。</p>
     </section>
-    <p class="privacy-note"><Icon name="leaf" size={14}/>工具中的输入仅在当前浏览器处理，不上传、不保存；刷新后清空。</p>
+    <p class="privacy-note"><Icon name="leaf" size={14}/>JSON、时间戳和 URL 输入仅在当前浏览器处理，不上传、不保存；刷新后清空。</p>
     <noscript><p class="example-notice">这三个工具需要启用 JavaScript。文章和记录仍可正常阅读。</p></noscript>
   </div>
   <script>
