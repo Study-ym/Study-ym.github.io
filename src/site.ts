@@ -3,8 +3,18 @@ export const site = {
   author: '余安',
   github: 'https://github.com/Study-ym',
   repo: 'https://github.com/Study-ym/Study-ym.github.io',
-  description: '记录生活与学习，整理想法，做些日常用得上的小工具。',
+  description: '余安的个人空间：Ideas、私人空间、工具箱、游戏与更多。',
 };
+
+export function gardenModules(cloud: boolean) {
+  return [
+    { key: 'ideas', url: '/ideas/', label: 'Ideas', icon: 'bulb', description: '捕捉灵感，推进想法。' },
+    { key: 'private', url: cloud ? '/private/' : 'https://ymihh.xyz/private/', label: '私人空间', icon: 'lock', description: '只属于你的记录。' },
+    { key: 'tools', url: '/tools/', label: '工具箱', icon: 'tools', description: '处理日常的小任务。' },
+    { key: 'games', url: '/games/', label: '游戏', icon: 'gamepad', description: '留一点时间，放松一下。' },
+    { key: 'other', url: '/other/', label: '其他', icon: 'grid', description: '记录、关于与更多。' },
+  ];
+}
 
 export const stages = {
   seed: { label: '幼苗', description: '刚刚记下，留待继续' },

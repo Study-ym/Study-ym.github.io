@@ -1,0 +1,91 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+<Layout title="2048" active="games" description="合并相同数字，挑战 2048。支持键盘和触屏的浏览器小游戏。">
+  <div class="game-page" data-game-2048>
+    <a class="game-back" href="/games/">← 返回游戏</a>
+    <header class="game-heading"><h1>2048<span>数字反应堆</span></h1><p>让相同数字相遇，看看能走多远。</p></header>
+    <div class="game-layout">
+      <section class="game-console" aria-label="2048 游戏">
+        <div class="game-scores"><div><span>本局得分</span><strong data-score>0</strong></div><div><span>最高纪录</span><strong data-best>0</strong></div><button type="button" data-restart>重新开始 ↻</button></div>
+        <p class="board-label"><span>4 × 4 棋盘</span><span>步数 <b data-moves>000</b></span></p>
+        <div class="game-board" data-board tabindex="0" role="group" aria-label="2048 棋盘，点击或聚焦后使用方向键操作" aria-describedby="game-help">
+          {Array.from({ length: 16 }, () => <div class="game-cell" data-cell data-value="0" role="img" aria-label="空方块"></div>)}
+        </div>
+        <p class="game-status" data-status role="status" aria-live="polite" aria-atomic="true">正在准备棋盘…</p>
+        <button class="game-continue" type="button" data-continue hidden>继续挑战 →</button>
+        <div class="game-controls" aria-label="移动方块">
+          <button type="button" data-direction="up" aria-label="向上移动">↑</button>
+          <button type="button" data-direction="left" aria-label="向左移动">←</button>
+          <button type="button" data-direction="down" aria-label="向下移动">↓</button>
+          <button type="button" data-direction="right" aria-label="向右移动">→</button>
+        </div>
+      </section>
+      <aside class="game-manual"><h2>从 2 开始。</h2><p>一次滑动，一次合并。把散落的小数字，慢慢推向 2048。</p><ol id="game-help"><li><strong>移动</strong><span>点击棋盘后按方向键，也可以在棋盘上滑动，或使用下方按钮。</span></li><li><strong>合并</strong><span>相邻的相同数字会合二为一，合并出的数字就是这次得分。</span></li><li><strong>挑战</strong><span>每次有效移动会出现一个新方块。棋盘填满且无法合并时，本局结束。</span></li></ol><div class="game-tip"><span>小提示</span><p>试着把最大的数字留在一个角落，为下一次合并留出空间。</p></div><p class="game-storage" data-storage>最高分仅保存在此浏览器。当前棋局不保存，刷新后重新开始。</p></aside>
+    </div>
+    <dialog data-restart-dialog aria-labelledby="restart-title"><h2 id="restart-title">重新开始？</h2><p>当前棋局和本局得分会清空，最高分会保留。</p><div class="restart-actions"><button type="button" data-restart-cancel autofocus>继续这局</button><button type="button" data-restart-confirm>重新开始</button></div></dialog>
+    <noscript><p>2048 需要启用 JavaScript 才能游玩。</p></noscript>
+  </div>
+  <script>import '../../scripts/game-2048';</script>
+</Layout>
+<style>
+  .game-page { max-width: 1040px; margin: 0 auto; padding: 28px 0 36px; }
+  .game-back { color: var(--muted); font-size: 13px; text-decoration: none; }
+  .game-back:hover { color: var(--accent); }
+  .game-heading { margin: 24px 0; }
+  .game-eyebrow, .board-label { font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: .12em; color: var(--accent); }
+  .game-heading h1 { font-size: clamp(42px, 8vw, 70px); line-height: 1.1; letter-spacing: -.05em; margin: 12px 0; }
+  .game-heading h1 span { display: inline-block; font-size: 16px; letter-spacing: .08em; font-weight: 400; margin-left: 20px; color: var(--muted); }
+  .game-heading > p:last-child { color: var(--muted); font-size: 14px; }
+  .game-layout { display: grid; grid-template-columns: minmax(0, 490px) minmax(220px, 1fr); gap: 60px; align-items: start; }
+  .game-console { padding: 22px; border: 1px solid var(--line); background: var(--paper); min-width: 0; }
+  .game-scores { display: flex; align-items: center; gap: 24px; margin-bottom: 26px; }
+  .game-scores > div { min-width: 0; }
+  .game-scores span { display: block; font-size: 11px; color: var(--muted); }
+  .game-scores strong { display: block; margin-top: 4px; font-family: ui-monospace, monospace; font-size: clamp(18px, 4vw, 26px); overflow-wrap: anywhere; }
+  .game-page button { cursor: pointer; border: 1px solid var(--line); color: var(--ink); background: var(--ground); font: inherit; }
+  .game-page button:hover { border-color: var(--accent); color: var(--accent); }
+  .game-page button:focus-visible, .game-board:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  .game-page button:disabled { opacity: .4; cursor: default; }
+  [data-restart-dialog] { max-width: 420px; }
+  [data-restart-dialog] h2 { font-size: 22px; margin: 0 0 12px; }
+  [data-restart-dialog] p { color: var(--muted); font-size: 14px; }
+  .restart-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+  .restart-actions button { padding: 10px 14px; min-height: 44px; font-size: 13px; }
+  .game-scores button { margin-left: auto; padding: 10px 12px; font-size: 12px; min-height: 44px; flex-shrink: 0; }
+  .board-label { display: flex; justify-content: space-between; font-size: 9px; color: var(--muted); margin: 0 0 10px; }
+  .board-label b { font-weight: 400; color: var(--accent); }
+  .game-board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 8px; background: var(--ground); border: 1px solid var(--line); touch-action: none; user-select: none; }
+  .game-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; min-width: 0; background: rgba(75, 138, 166, .07); border: 1px solid rgba(107, 198, 229, .09); color: #c8e9f5; font-family: ui-monospace, monospace; font-weight: 600; font-size: clamp(18px, 5vw, 32px); }
+  .game-cell[data-value="2"] { background: #172d40; }
+  .game-cell[data-value="4"] { background: #193c4d; }
+  .game-cell[data-value="8"] { background: #185265; color: #e6fbff; }
+  .game-cell[data-value="16"] { background: #146078; color: #e6fbff; }
+  .game-cell[data-value="32"] { background: #16758c; color: #fff; }
+  .game-cell[data-value="64"] { background: #18899a; color: #fff; }
+  .game-cell[data-value="128"] { background: #68c7d6; color: #062632; font-size: clamp(18px, 4.5vw, 28px); }
+  .game-cell[data-value="256"] { background: #8bdde5; color: #062632; font-size: clamp(18px, 4.5vw, 28px); }
+  .game-cell[data-value="512"] { background: #b1eced; color: #062632; font-size: clamp(18px, 4.5vw, 28px); }
+  .game-cell[data-value="1024"], .game-cell[data-value="2048"] { background: #f1cc85; color: #382914; font-size: clamp(14px, 4vw, 24px); }
+  .game-cell[data-value="2048"] { background: #ffe5a3; }
+  .game-status { min-height: 42px; margin: 15px 0; color: var(--muted); line-height: 1.7; font-size: 12px; }
+  .game-continue { width: 100%; padding: 12px; margin-bottom: 15px; color: var(--accent) !important; }
+  .game-continue[hidden] { display: none; }
+  .game-controls { display: grid; grid-template-columns: repeat(3, 46px); justify-content: center; gap: 6px; }
+  .game-controls button { height: 44px; font-size: 20px; }
+  .game-controls button:first-child { grid-column: 2; }
+  .game-controls button:nth-child(2) { grid-column: 1; }
+  .game-manual { padding-top: 18px; }
+  .game-manual h2 { font-size: 28px; margin: 16px 0; }
+  .game-manual > p:not(.game-eyebrow), .game-manual li span { color: var(--muted); font-size: 13px; line-height: 1.9; }
+  .game-manual ol { margin: 30px 0; padding-left: 23px; }
+  .game-manual li { padding-left: 8px; margin-bottom: 20px; color: var(--accent); }
+  .game-manual li strong { display: block; font-size: 13px; color: var(--ink); }
+  .game-manual li span { display: block; margin-top: 5px; }
+  .game-tip { border-left: 2px solid var(--accent); padding: 5px 0 5px 16px; }
+  .game-tip > span { color: var(--accent); font: 10px ui-monospace, monospace; letter-spacing: .08em; }
+  .game-tip p { font-size: 13px; color: var(--muted); line-height: 1.8; margin-bottom: 0; }
+  .game-manual .game-storage { font-size: 11px !important; margin-top: 28px; }
+  @media (max-width: 760px) { .game-layout { grid-template-columns: minmax(0, 490px); justify-content: center; gap: 20px; } .game-manual { padding: 0 8px; } .game-heading { margin: 18px 0; } .game-heading h1 { font-size: 36px; } .game-page { padding-top: 18px; } }
+  @media (max-width: 380px) { .game-console { padding: 12px; } .game-board { padding: 5px; gap: 5px; } .game-scores { gap: 14px; } .game-scores button { padding: 8px; font-size: 11px; } .game-heading h1 span { display: block; margin: 12px 0 0; } }
+</style>

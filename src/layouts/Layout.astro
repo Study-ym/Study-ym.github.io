@@ -1,11 +1,11 @@
 ---
 import '../styles/global.css';
 import Icon from '../components/Icon.astro';
-import { site } from '../site';
+import { site, gardenModules } from '../site';
 interface Props { title?: string; description?: string; active?: string; noindex?: boolean; }
 const { title, description = site.description, active = 'home', noindex = false } = Astro.props;
 const cloud = import.meta.env.PUBLIC_GARDEN_CLOUD === 'true';
-const navigation = [ { key:'home', url:'/', label:'花园', icon:'home' }, { key:'notes',url:'/notes/',label:'记录',icon:'book'}, {key:'ideas',url:'/ideas/',label:'Ideas',icon:'bulb'}, {key:'tools',url:'/tools/',label:'工具箱',icon:'tools'}, {key:'about',url:'/about/',label:'关于',icon:'leaf'}, {key:'private',url:cloud ? '/private/' : 'https://ymihh.xyz/private/',label:'私人空间',icon:'lock'} ];
+const navigation = gardenModules(cloud);
 ---
 <!doctype html>
 <html lang="zh-CN">
@@ -14,7 +14,7 @@ const navigation = [ { key:'home', url:'/', label:'花园', icon:'home' }, { key
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title ? `${title} · ${site.name}` : site.name}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#fafbfc" />
+    <meta name="theme-color" content="#060f18" />
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -24,26 +24,25 @@ const navigation = [ { key:'home', url:'/', label:'花园', icon:'home' }, { key
     <meta property="og:type" content="website" />
     <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site)} />
   </head>
-  <body>
+  <body class:list={{ 'console-page': active === 'home' }}>
     <a class="skip-link" href="#main">跳到内容</a>
     <header class="site-header">
       <div class="header-inner">
-        <a href="/" class="studio-brand" aria-label="余安的数字花园首页"><span class="brand-mark" aria-hidden="true"><Icon name="code" size={22}/></span><span>余安</span></a>
-        <nav class="site-nav" aria-label="主导航">{navigation.filter(item => item.key !== 'private').map(item => <a class:list={['nav-link', { selected: active === item.key }]} href={item.url} aria-current={active === item.key ? 'page' : undefined}>{item.label}</a>)}</nav>
+        <a href="/" class="studio-brand" aria-label="余安的数字花园首页"><span class="brand-mark" aria-hidden="true"><Icon name="reactor" size={30}/></span><span>余安<small>数字花园</small></span></a>
+        <nav class="site-nav" aria-label="主导航">{navigation.map(item => <a class:list={['nav-link', { selected: active === item.key }]} href={item.url} aria-current={active === item.key ? 'page' : undefined}>{item.label}</a>)}</nav>
         <div class="header-actions">
           <button class="header-search" data-search-open aria-label="搜索花园"><Icon name="search" size={18} /><span>搜索</span><kbd>⌘ K</kbd></button>
-          <a class:list={['private-link', {selected: active === 'private'}]} href={cloud ? '/private/' : 'https://ymihh.xyz/private/'} aria-current={active === 'private' ? 'page' : undefined}><Icon name="lock" size={15}/><span>私人空间</span></a>
         </div>
       </div>
     </header>
     <div class="page-shell">
       <main id="main"><slot /></main>
-      <footer class="footer"><span>© {new Date().getFullYear()} {site.author} · 数字花园</span><div><a href={site.github} target="_blank" rel="noopener noreferrer">GitHub<Icon name="external" size={12}/></a><a href="/rss.xml">RSS</a><a href={site.repo} target="_blank" rel="noopener noreferrer">源码</a></div></footer>
+      <footer class="footer"><span>© {new Date().getFullYear()} {site.author} · 数字花园</span><a href="/other/">关于与更多</a></footer>
     </div>
     <dialog id="search-dialog" aria-labelledby="search-title">
       <div class="search-top"><h2 id="search-title">搜索花园</h2><button data-search-close class="icon-button" aria-label="关闭搜索"><Icon name="close" /></button></div>
-      <label class="search-input-wrap"><Icon name="search" /><input id="global-search" type="search" aria-label="搜索记录、想法和工具" placeholder="搜索记录、想法和工具…" autocomplete="off" /></label>
-      <p id="search-status" class="muted" role="status">输入关键词搜索记录、想法和工具。</p><ul id="search-results"></ul>
+      <label class="search-input-wrap"><Icon name="search" /><input id="global-search" type="search" aria-label="搜索公开内容" placeholder="搜索想法、工具、游戏…" autocomplete="off" /></label>
+      <p id="search-status" class="muted" role="status">输入关键词搜索公开内容。</p><ul id="search-results"></ul>
     </dialog>
     <script>
       const dialog = document.querySelector<HTMLDialogElement>('#search-dialog')!;
@@ -63,7 +62,7 @@ const navigation = [ { key:'home', url:'/', label:'花园', icon:'home' }, { key
         const current = ++sequence;
         const query = input.value.trim().toLocaleLowerCase();
         results.replaceChildren();
-        if (!query) { status.textContent = '输入关键词搜索记录、想法和工具。'; return; }
+        if (!query) { status.textContent = '输入关键词搜索公开内容。'; return; }
         status.textContent = '正在查找…';
         try {
           const entries = await loadIndex();

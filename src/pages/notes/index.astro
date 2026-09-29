@@ -6,7 +6,7 @@ import { publicNotes } from '../../lib/content';
 const notes = await publicNotes();
 const tags = [...new Set(notes.flatMap(note => note.data.tags))];
 ---
-<Layout title="记录" active="notes">
+<Layout title="记录" active="other">
   <header class="page-heading"><h1>记录<span class="count">{notes.length} 篇</span></h1><p>长文、短记、还在整理的念头，都可以在这里落地。</p></header>
   <label class="list-search"><Icon name="search" size={17}/><input id="note-query" type="search" placeholder="搜索记录内容…" aria-label="搜索记录内容" /></label>
   <div class="filter-bar" aria-label="按标签筛选"><button class="filter-button" data-tag="" aria-pressed="true">全部</button>{tags.map(tag => <button class="filter-button" data-tag={tag} aria-pressed="false">{tag}</button>)}</div>

@@ -17,4 +17,6 @@
 
 - Public/private boundary: `/private/` pages use Nginx `auth_request` against `/api/auth/check`; data APIs independently verify sessions. Authenticated pages are no-store, noindex, excluded from public search and sitemap. Public GitHub content is never private, even if draft. Login return paths must use the allowlist in `src/lib/private-routes.mjs`.
 
-- Visual design: light studio theme, shared top navigation, blue accent, sans-serif reading and monospace metadata. Public layout uses `src/styles/global.css`; keep the independent calendar in `src/styles/cycle.css` soft and unchanged by global redesigns.
+- Visual design: restrained JARVIS-inspired dark navy/cyan console. Exactly five main modules: Ideas, private space, tools, games, other; notes/about live under other. Keep homepage to module entrances, with no fake telemetry. Navigation metadata lives in src/site.ts gardenModules(). Public layout uses `src/styles/global.css`; keep the independent calendar in `src/styles/cycle.css` soft and unchanged by global redesigns.
+
+- 2048 game: `src/lib/game-2048.mjs` pure rules; `src/scripts/game-2048.ts` keyboard/swipe/button UI; `/games/2048/`. Best score is local-only, with storage failure fallback. Targeted tests: `node --test tests/game-2048.test.mjs`.

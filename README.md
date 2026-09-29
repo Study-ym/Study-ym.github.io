@@ -83,6 +83,10 @@ GitHub Pages 备用站仍是本地模式，不会上传其浏览器旧记录。�
 | `src/lib/content.ts` | 公共内容筛选，统一排除草稿 |
 | `src/pages/tools/index.astro` | 工具交互 |
 | `src/lib/tools.mjs` | 工具纯函数 |
+| `src/pages/games/` | 游戏目录与 2048 页面 |
+| `src/lib/game-2048.mjs` | 2048 移动、合并与胜负规则 |
+| `src/scripts/game-2048.ts` | 2048 键盘、滑动与按钮交互 |
+| `src/pages/other/index.astro` | 记录、关于及外部链接 |
 | `src/components/CyclePage.astro` | 月笺独立手机页面，服务器入口 `/private/cycle/` |
 | `src/scripts/cycle.ts` | 月笺交互、本地保存与备份 |
 | `src/lib/cycle.mjs` | 日期、重叠检查与备份校验 |
@@ -93,4 +97,4 @@ GitHub Pages 备用站仍是本地模式，不会上传其浏览器旧记录。�
 
 ## 界面风格
 
-公开花园与私人空间使用浅色工作室风格：顶部导航、深灰正文、蓝色强调、记录列表和紧凑工具入口。全局视觉在 `src/styles/global.css`，共享页面框架在 `src/layouts/Layout.astro`。月笺使用独立样式，保留柔和配色与可关闭的小猫。
+首页使用深蓝与青色的贾维斯式控制台，中央环形界面配五个入口：Ideas、私人空间、工具箱、游戏、其他。记录与关于收纳在“其他”，原链接继续可用。五模块定义集中在 `src/site.ts` 的 `gardenModules()`。全局视觉在 `src/styles/global.css`，共享页面框架在 `src/layouts/Layout.astro`。月笺使用独立样式，保留柔和配色与可关闭的小猫。
