@@ -2,6 +2,12 @@
 
 正式站 https://ymihh.xyz；www 通过 HTTPS 跳转主域名。代码仓库保持 GitHub，开发及发布分支 main。Node 24、Nginx、SQLite 单实例，无外部应用依赖。当前服务器为 Alibaba Cloud Linux 3，既有 Node v24.14.0。重装镜像仍带 OpenClaw/SearXNG，本次未卸载它们。
 
+## 到期提醒服务试点
+
+`/services/renewal-reminders/` 是公开英文介绍和虚构数据演示，入口位于“其他”和站内搜索。演示只在当前标签页计算，不保存客户资料、不发邮件、不收款。当前参考报价为一次性 $79–149，具体工具、范围、费用和交付时间须另行约定。
+
+咨询地址配置在 `src/pages/services/renewal-reminders/index.astro` 的 `contactEmail`。为空时显示暂未开放接单；填入站长批准的公开邮箱后，重新构建发布即可启用咨询邮件链接。此链接只打开访客的邮件客户端，不替访客发送邮件。真实客户自动化需要单独交付，不应直接把演示改成公开客户数据库。
+
 ## 边界
 
 - `/srv/garden/releases/<release>` 是不可变发布版本；`/srv/garden/current` 是当前版本软链接。

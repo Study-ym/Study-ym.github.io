@@ -3,6 +3,7 @@ import { publicNotes, publicIdeas } from '../lib/content';
 export const GET: APIRoute = async () => {
   const [notes, ideas] = await Promise.all([publicNotes(), publicIdeas()]);
   const entries = [
+    {title:'客户到期提醒 · Renewal reminders',description:'英文服务介绍与虚构客户交互演示',kind:'服务',url:'/services/renewal-reminders/',text:'客户 到期 续费 提醒 服务 renewal reminder follow up demo'},
     {title:'2048',description:'滑动合并数字的轻量小游戏',kind:'游戏',url:'/games/2048/',text:'2048 游戏 数字 合并 滑动'},
     {title:'其他',description:'记录、关于、GitHub 与 RSS',kind:'导航',url:'/other/',text:'其他 记录 关于 GitHub RSS 订阅'},
     ...notes.map(n => ({title:n.data.title, description:n.data.description, kind:'记录', url:`/notes/${n.id}/`, text:[n.data.title,n.data.description,n.data.tags.join(' '),n.body].join(' ')})),

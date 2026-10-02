@@ -1,0 +1,62 @@
+---
+import '../../../styles/global.css';
+import '../../../styles/renewal-service.css';
+import { site } from '../../../site';
+// Add an owner-approved public email here before opening enquiries.
+const contactEmail = '';
+const title = 'Client renewal reminders · Yuan';
+const description = 'A small setup service for client renewal reminders. Try a working demo with fictional clients, review upcoming dates and preview an owner reminder.';
+const brief = 'Hello Yuan,\n\nI would like help with renewal reminders.\nBusiness type:\nCurrent tool (Excel, Google Sheets, Outlook, etc.):\nApproximate number of clients:\nHow far ahead should reminders arrive?\n\nPlease send a scope and quote. No client data attached.';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title><meta name="description" content={description} /><meta name="theme-color" content="#060f18" />
+    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} /><link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:title" content={title} /><meta property="og:description" content={description} /><meta property="og:type" content="website" />
+  </head>
+  <body class="renewal-service">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="service-header"><a class="service-brand" href="/">Yuan<span>Independent tools & services</span></a><nav aria-label="Page navigation"><a href="#demo">Try the demo</a><a href="#setup">The service</a><a href="/other/">Garden</a></nav></header>
+    <main id="main">
+      <section class="service-intro" aria-labelledby="service-title">
+        <div><h1 id="service-title">A quieter way to stay on top of renewals.</h1><p>Know which clients need a follow-up, without checking every date in a spreadsheet.</p><p class="intro-detail">A small reminder setup for freelancers and service businesses with recurring client work.</p><a class="service-button primary" href="#demo">Try it with sample clients</a></div>
+        <div class="date-track" aria-label="Example renewal timeline">
+          <div class="track-row"><span class="track-point"></span><time>02 Oct</time><div><strong>Time to follow up</strong><span>A reminder reaches your inbox.</span></div></div>
+          <div class="track-row"><span class="track-point"></span><time>05 Oct</time><div><strong>You contact your client</strong><span>Keep the conversation personal.</span></div></div>
+          <div class="track-row"><span class="track-point"></span><time>16 Oct</time><div><strong>Renewal due</strong><span>The date stays in view.</span></div></div>
+          <p>Illustrative workflow. The demo below sends no email.</p>
+        </div>
+      </section>
+
+      <section id="demo" class="demo-section" aria-labelledby="demo-title">
+        <div class="section-title"><div><h2 id="demo-title">Your next follow-ups, in one place.</h2><p>Change the date or reminder window. Select a client to preview a reminder.</p></div><span class="demo-badge">Interactive demo</span></div>
+        <p class="sample-note">All five clients are fictional. Changes stay in this tab and reset on reload. No account, upload or email delivery.</p>
+        <noscript><p class="sample-note">Enable JavaScript to use the interactive demo. You can still read the service details below.</p></noscript>
+        <div id="renewal-demo" hidden>
+          <div class="demo-toolbar">
+            <label>Demo date<input id="demo-date" type="date" value="2026-10-02" min="0001-01-01" max="9999-12-31" /></label>
+            <label>Remind me<select id="demo-lead"><option value="0">On the due date</option><option value="14" selected>14 days before</option><option value="30">30 days before</option><option value="60">60 days before</option></select></label>
+            <button id="demo-reset" class="service-button quiet" type="button">Reset demo</button>
+          </div>
+          <p id="demo-error" class="demo-error" role="alert" hidden></p>
+          <div class="demo-workspace">
+            <div class="queue-panel"><div class="queue-heading"><h3>Client list</h3><span id="queue-count"></span></div><ul id="renewal-queue" aria-label="Sample clients"></ul><p id="queue-empty" class="sample-note" hidden>No follow-ups needed in this window. Change the date or reminder window to explore.</p></div>
+            <section class="reminder-panel" aria-labelledby="preview-title"><div class="preview-top"><h3 id="preview-title">Reminder preview</h3><span>To you, the business owner</span></div><p id="preview-state" class="preview-state"></p><div class="email-preview"><p class="email-subject" id="preview-subject"></p><p>Hello,</p><p id="preview-body"></p><p>Review the details and contact your client when you’re ready.</p><p class="email-signoff">Your renewal reminder</p></div><button id="demo-handled" type="button" class="service-button primary">Mark followed up</button><p class="preview-footnote">This button only changes the demo list.</p></section>
+          </div>
+          <p id="demo-status" class="demo-status" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section id="setup" class="setup-section" aria-labelledby="setup-title">
+        <div class="setup-intro"><h2 id="setup-title">Want this for your client list?</h2><p>I can help set up a simple reminder workflow around the tools you already use.</p><div class="pilot-price"><strong>$79–149</strong><span>Indicative pilot price · one-time setup</span></div><p class="price-note">Final price and feasibility confirmed after reviewing your workflow. Any third-party subscriptions are separate and agreed in advance.</p></div>
+        <div class="setup-details"><h3>A focused first setup</h3><ul><li>One client list, up to 100 records.</li><li>One reminder schedule and one owner inbox.</li><li>A test using fictional records before going live.</li><li>A short handover guide so you can update dates yourself.</li></ul><p>We agree on the tools, access and delivery date before work starts. This is a setup service; the demo is not a hosted customer database or an automated email service.</p><details><summary>Can I keep using my spreadsheet?</summary><p>That is the starting point. Tell me whether you use Excel, Google Sheets or another tool. I will check which reminder workflow your account supports before quoting.</p></details><details><summary>Will you email my clients?</summary><p>The proposed setup reminds you. You choose when and how to contact clients. Automatic messages to clients are outside this pilot.</p></details><details><summary>What information should I share first?</summary><p>Your current tool, approximate list size and preferred reminder timing are enough. Please do not send client names, email addresses, contracts or passwords in an initial enquiry.</p></details></div>
+      </section>
+
+      <section id="enquire" class="enquiry-section" aria-labelledby="enquiry-title"><div><h2 id="enquiry-title">Start with your workflow.</h2><p>No customer data needed. Just your current tool, list size and reminder timing.</p>{contactEmail ? <a class="service-button primary" href={`mailto:${contactEmail}?subject=${encodeURIComponent('Renewal reminder setup enquiry')}&body=${encodeURIComponent(brief)}`}>Email a setup enquiry</a> : <p class="enquiry-pending">Pilot enquiries are not open yet. You can explore the demo above.</p>}</div><div class="brief-panel"><label for="enquiry-brief">A short enquiry template</label><textarea id="enquiry-brief" rows="8" readonly>{brief}</textarea><button id="copy-brief" class="service-button quiet" type="button" hidden>Copy enquiry template</button><p id="copy-status" role="status" aria-live="polite"></p></div></section>
+    </main>
+    <footer class="service-footer"><span>Built by Yuan</span><a href={site.github} target="_blank" rel="noopener noreferrer">GitHub</a><a href="/">Back to the garden</a></footer>
+    <script>import '../../../scripts/renewal-demo';</script>
+  </body>
+</html>
